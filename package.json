@@ -1,0 +1,15 @@
+{
+  "name": "jedana-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -c \"cyan,magenta\" -n \"WEB,SERVER\" \"npm run dev --workspace=apps/web\" \"npm run start:dev --workspace=apps/server\"",
+    "build": "npm run build --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
