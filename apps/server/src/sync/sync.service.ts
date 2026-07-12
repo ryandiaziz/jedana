@@ -10,28 +10,63 @@ interface TableSchema {
 const SYNC_SCHEMA: Record<string, TableSchema> = {
   wallets: {
     tableName: 'wallets',
-    columns: ['id', 'user_id', 'name', 'is_deleted', 'created_at', 'updated_at'],
-    pullQuery: 'SELECT * FROM wallets WHERE user_id = $1 AND updated_at > $2'
+    columns: [
+      'id',
+      'user_id',
+      'name',
+      'is_deleted',
+      'created_at',
+      'updated_at',
+    ],
+    pullQuery: 'SELECT * FROM wallets WHERE user_id = $1 AND updated_at > $2',
   },
   transactions: {
     tableName: 'transactions',
-    columns: ['id', 'user_id', 'wallet_id', 'type', 'amount', 'date', 'note', 'payee', 'is_deleted', 'created_at', 'updated_at'],
-    pullQuery: 'SELECT * FROM transactions WHERE user_id = $1 AND updated_at > $2'
+    columns: [
+      'id',
+      'user_id',
+      'wallet_id',
+      'type',
+      'amount',
+      'date',
+      'note',
+      'payee',
+      'is_deleted',
+      'created_at',
+      'updated_at',
+    ],
+    pullQuery:
+      'SELECT * FROM transactions WHERE user_id = $1 AND updated_at > $2',
   },
   tags: {
     tableName: 'tags',
-    columns: ['id', 'user_id', 'name', 'is_archived', 'is_deleted', 'created_at', 'updated_at'],
-    pullQuery: 'SELECT * FROM tags WHERE user_id = $1 AND updated_at > $2'
+    columns: [
+      'id',
+      'user_id',
+      'name',
+      'is_archived',
+      'is_deleted',
+      'created_at',
+      'updated_at',
+    ],
+    pullQuery: 'SELECT * FROM tags WHERE user_id = $1 AND updated_at > $2',
   },
   transaction_tags: {
     tableName: 'transaction_tags',
-    columns: ['id', 'transaction_id', 'tag_id', 'is_deleted', 'created_at', 'updated_at'],
+    columns: [
+      'id',
+      'transaction_id',
+      'tag_id',
+      'is_deleted',
+      'created_at',
+      'updated_at',
+    ],
     pullQuery: `
       SELECT tt.* FROM transaction_tags tt
       INNER JOIN transactions t ON t.id = tt.transaction_id
       WHERE t.user_id = $1 AND tt.updated_at > $2
-    `
-  }
+    `,
+  },
 };
 
 @Injectable()
@@ -45,7 +80,10 @@ export class SyncService {
     return ms ? new Date(ms) : new Date();
   }
 
-  async push(userId: string, data: any) {
+  async push(
+    userId: string,
+    data: Record<string, Array<Record<string, unknown>>>,
+  ): Promise<{ success: boolean }> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
@@ -60,28 +98,36 @@ export class SyncService {
         if (Array.isArray(records) && records.length > 0) {
           for (const record of records) {
             // Build values array based on schema columns
-            const values = schema.columns.map(col => {
+            const values = schema.columns.map((col) => {
               if (col === 'user_id') return userId;
-              
+
               // map snake_case column back to camelCase to find in record
-              const camelCol = col.replace(/_([a-z])/g, g => g[1].toUpperCase());
+              const camelCol = col.replace(/_([a-z])/g, (g) =>
+                g[1].toUpperCase(),
+              );
               let val = record[camelCol];
-              
+
               if (val === undefined) {
-                 if (col === 'is_deleted' || col === 'is_archived') val = false;
+                if (col === 'is_deleted' || col === 'is_archived') val = false;
               }
 
               if (col === 'created_at' || col === 'updated_at') {
-                return this.toDate(val);
+                return this.toDate(val as number | undefined);
               }
               return val !== undefined ? val : null;
             });
 
-            const placeholders = schema.columns.map((_, i) => `$${i + 1}`).join(', ');
-            
+            const placeholders = schema.columns
+              .map((_, i) => `$${i + 1}`)
+              .join(', ');
+
             // Build ON CONFLICT UPDATE SET clauses (excluding id and user_id)
-            const updateCols = schema.columns.filter(c => c !== 'id' && c !== 'user_id');
-            const updateSet = updateCols.map(c => `${c} = EXCLUDED.${c}`).join(', ');
+            const updateCols = schema.columns.filter(
+              (c) => c !== 'id' && c !== 'user_id',
+            );
+            const updateSet = updateCols
+              .map((c) => `${c} = EXCLUDED.${c}`)
+              .join(', ');
 
             const query = `
               INSERT INTO ${schema.tableName} (${schema.columns.join(', ')})
@@ -107,24 +153,29 @@ export class SyncService {
     }
   }
 
-  async pull(userId: string, lastSync: Date) {
+  async pull(
+    userId: string,
+    lastSync: Date,
+  ): Promise<Record<string, Array<Record<string, unknown>>>> {
     const dateParam = lastSync || new Date(0);
-    const result: any = {};
+    const result: Record<string, Array<Record<string, unknown>>> = {};
 
     // Map DB snake_case back to camelCase for frontend
-    const mapToCamelCase = (row: any) => {
-      const newObj: any = {};
+    const mapToCamelCase = (row: Record<string, unknown>) => {
+      const newObj: Record<string, unknown> = {};
       for (const key in row) {
         const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-        
+
         // node-postgres returns BIGINT and NUMERIC as strings. Convert them to numbers.
         if (camelKey === 'amount' || camelKey === 'date') {
-           newObj[camelKey] = Number(row[key]);
+          newObj[camelKey] = Number(row[key]);
         } else if (camelKey === 'createdAt' || camelKey === 'updatedAt') {
-           // node-postgres returns Date objects for TIMESTAMP columns. Frontend expects numbers.
-           newObj[camelKey] = row[key] ? new Date(row[key]).getTime() : undefined;
+          // node-postgres returns Date objects for TIMESTAMP columns. Frontend expects numbers.
+          newObj[camelKey] = row[key]
+            ? new Date(row[key] as string | number | Date).getTime()
+            : undefined;
         } else {
-           newObj[camelKey] = row[key];
+          newObj[camelKey] = row[key];
         }
       }
       return newObj;

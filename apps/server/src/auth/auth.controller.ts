@@ -1,7 +1,14 @@
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+
+interface RequestWithUser extends Request {
+  user: {
+    id: string;
+    email: string;
+  };
+}
 
 @Controller('auth')
 export class AuthController {
@@ -9,13 +16,13 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req: any) {
+  googleAuth() {
     // Initiates the Google OAuth flow
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
+  googleAuthRedirect(@Req() req: RequestWithUser, @Res() res: Response) {
     // Generate JWT
     const payload = { email: req.user.email, sub: req.user.id };
     const token = this.jwtService.sign(payload);
@@ -35,10 +42,10 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
-  getProfile(@Req() req: any) {
+  getProfile(@Req() req: RequestWithUser) {
     return req.user;
   }
-  
+
   @Get('logout')
   logout(@Res() res: Response) {
     res.clearCookie('auth_token');

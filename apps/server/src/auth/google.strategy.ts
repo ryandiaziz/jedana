@@ -1,7 +1,15 @@
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, VerifyCallback } from 'passport-google-oauth20';
+import { Strategy, VerifyCallback, Profile } from 'passport-google-oauth20';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Pool } from 'pg';
+
+export interface User {
+  id: string;
+  email: string;
+  google_id?: string;
+  created_at?: Date;
+  updated_at?: Date;
+}
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -19,24 +27,29 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
+    profile: Profile,
     done: VerifyCallback,
-  ): Promise<any> {
+  ): Promise<void> {
     const { id, emails } = profile;
-    const email = emails[0].value;
+    const email = emails?.[0]?.value;
+
+    if (!email) {
+      done(new Error('No email found from Google profile'), false);
+      return;
+    }
 
     try {
       // Find or create user
-      const result = await this.pool.query(
+      const result = await this.pool.query<User>(
         'SELECT * FROM users WHERE google_id = $1 OR email = $2',
         [id, email],
       );
 
-      let user = result.rows[0];
+      let user: User | undefined = result.rows[0];
 
       if (!user) {
         // Create new user
-        const insertResult = await this.pool.query(
+        const insertResult = await this.pool.query<User>(
           'INSERT INTO users (email, google_id) VALUES ($1, $2) RETURNING *',
           [email, id],
         );
@@ -44,7 +57,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         this.logger.log(`Created new user for email: ${email}`);
       } else if (!user.google_id) {
         // Link existing email to google account
-        const updateResult = await this.pool.query(
+        const updateResult = await this.pool.query<User>(
           'UPDATE users SET google_id = $1 WHERE email = $2 RETURNING *',
           [id, email],
         );
@@ -54,7 +67,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       done(null, user);
     } catch (error) {
       this.logger.error('Error in Google Strategy validate', error);
-      done(error, false);
+      done(error instanceof Error ? error : new Error(String(error)), false);
     }
   }
 }

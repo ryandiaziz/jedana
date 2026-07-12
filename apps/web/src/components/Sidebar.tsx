@@ -30,7 +30,7 @@ export default function Sidebar() {
         {/* Desktop Logo */}
         <button 
           onClick={() => !isSidebarOpen && setIsSidebarOpen(true)}
-          className={`group w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 hidden md:flex ${!isSidebarOpen ? 'hover:bg-primary transition-colors cursor-pointer' : 'cursor-default'}`}
+          className={`group w-8 h-8 rounded-full bg-foreground hidden md:flex items-center justify-center shrink-0 ${!isSidebarOpen ? 'hover:bg-primary transition-colors cursor-pointer' : 'cursor-default'}`}
           title={!isSidebarOpen ? "Expand Sidebar" : undefined}
         >
           <span className={`text-background font-bold ${!isSidebarOpen && 'group-hover:hidden'}`}>J</span>
