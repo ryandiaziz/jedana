@@ -10,7 +10,7 @@ export default function Sidebar() {
   const { user, isLoading, logout } = useAuth();
 
   const handleLogout = async () => {
-    if (window.confirm("Apakah Anda yakin ingin logout? Peringatan: SELURUH data lokal di perangkat ini akan DHAPUS secara fisik demi keamanan privasi.")) {
+    if (window.confirm("Are you sure you want to log out? Warning: ALL local data on this device will be PHYSICALLY DELETED for your privacy.")) {
       await logout();
       
       // Wipe IndexedDB Data
@@ -25,7 +25,7 @@ export default function Sidebar() {
   };
 
   const handleResetSync = async () => {
-    if (window.confirm("Fitur ini akan menghapus data lokal yang mungkin bermasalah dan mengunduh ulang seluruh riwayat transaksi Anda langsung dari server. Lanjutkan?")) {
+    if (window.confirm("This will clear potentially corrupted local data and re-download your entire transaction history directly from the server. Continue?")) {
       // Wipe IndexedDB Data
       await Promise.all(db.tables.map(table => table.clear()));
       
@@ -75,24 +75,24 @@ export default function Sidebar() {
           <LayoutDashboard size={18} className="shrink-0" />
           {isSidebarOpen && <span className="truncate">Dashboard</span>}
         </NavLink>
-        <NavLink to="/statistics" title="Statistik" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+        <NavLink to="/statistics" title="Statistics" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
           <PieChart size={18} className="shrink-0" />
-          {isSidebarOpen && <span className="truncate">Statistik</span>}
+          {isSidebarOpen && <span className="truncate">Statistics</span>}
         </NavLink>
-        <NavLink to="/wallets" title="Dompet" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+        <NavLink to="/wallets" title="Wallets" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
           <Wallet size={18} className="shrink-0" />
-          {isSidebarOpen && <span className="truncate">Dompet</span>}
+          {isSidebarOpen && <span className="truncate">Wallets</span>}
         </NavLink>
-        <NavLink to="/tags" title="Tag & Arsip" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+        <NavLink to="/tags" title="Tags & Archives" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
           <TagsIcon size={18} className="shrink-0" />
-          {isSidebarOpen && <span className="truncate">Tag & Arsip</span>}
+          {isSidebarOpen && <span className="truncate">Tags & Archives</span>}
         </NavLink>
       </nav>
       <div className="mt-auto flex flex-col gap-4 border-t border-border pt-4">
         {isLoading ? (
           <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground">
             <Loader2 size={18} className="shrink-0 animate-spin" />
-            {isSidebarOpen && <span className="truncate">Memuat...</span>}
+            {isSidebarOpen && <span className="truncate">Loading...</span>}
           </div>
         ) : user ? (
           <div className="flex flex-col gap-2">
@@ -106,11 +106,11 @@ export default function Sidebar() {
             
             <button 
               onClick={handleResetSync}
-              title="Tarik Ulang Data (Force Pull)" 
+              title="Force Pull Data" 
               className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium text-blue-500 hover:bg-blue-500/10 cursor-pointer"
             >
               <RefreshCw size={18} className="shrink-0" />
-              {isSidebarOpen && <span className="truncate">Tarik Ulang Data</span>}
+              {isSidebarOpen && <span className="truncate">Force Sync Data</span>}
             </button>
 
             <button 

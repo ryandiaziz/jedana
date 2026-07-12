@@ -4,37 +4,37 @@ Aplikasi pencatatan keuangan untuk melacak pemasukan dan pengeluaran, yang diran
 
 ## Language
 
-**Pengguna**:
-Orang yang terdaftar dan menggunakan aplikasi Jedana. Aplikasi bekerja secara *Offline-First*. 
-- **Anonim**: Pengguna yang belum login. Seluruh data disimpan murni di IndexedDB lokal.
-- **Transisi Login**: Saat Pengguna anonim melakukan login (Klaim), seluruh data lokal mereka secara otomatis diikat (diklaim) ke akun Google tersebut dan disinkronisasikan ke *server*.
-- **Logout**: Saat Pengguna menekan Logout, **seluruh data di IndexedDB wajib dihapus (wipe) secara fisik** demi keamanan privasi dari pengguna perangkat selanjutnya, dengan memberikan peringatan UI sebelumnya.
-_Avoid_: User, akun, klien
+**User**:
+The person registered and using the Jedana application. The application works Offline-First. 
+- **Anonymous**: User who has not logged in. All data is stored purely in local IndexedDB.
+- **Login Transition**: When an anonymous user logs in, all their local data is automatically tied (claimed) to that Google account and synced to the server.
+- **Logout**: When the User clicks Logout, **all data in IndexedDB must be physically wiped** for privacy security, with a UI warning beforehand.
+_Avoid_: Klien, akun, customer
 
-**Dompet**:
-Tempat pembukuan berbasis "Amplop Anggaran" atau tujuan keuangan, BUKAN representasi fisik tempat uang disimpan (misal: "Dana Kebutuhan Sehari-hari", "Dana Liburan"). Perpindahan fisik antar-rekening/ATM tidak dilacak.
-_Avoid_: Rekening, buku, ledger, akun bank
+**Wallet**:
+A bookkeeping space based on the "Envelope Budgeting" concept or financial goals, NOT a physical representation of where money is stored (e.g., "Daily Needs Fund", "Vacation Fund"). Physical transfers between bank accounts/ATMs are not tracked.
+_Avoid_: Dompet (Indonesian), Rekening, buku, ledger, akun bank
 
-**Transaksi**:
-Catatan perpindahan uang, baik masuk maupun keluar dari sebuah Dompet.
-_Avoid_: Mutasi, record
+**Transaction**:
+A record of money moving in or out of a Wallet.
+_Avoid_: Mutasi, record, riwayat
 
-**Pemasukan**:
-Jenis transaksi di mana uang bertambah ke dalam Dompet.
-_Avoid_: Income, deposit
+**Income**:
+A transaction type where money is added to a Wallet.
+_Avoid_: Pemasukan, deposit, gain
 
-**Pengeluaran**:
-Jenis transaksi di mana uang berkurang dari Dompet.
-_Avoid_: Expense, withdrawal
+**Expense**:
+A transaction type where money is deducted from a Wallet.
+_Avoid_: Pengeluaran, withdrawal, loss
 
-**Pembatalan (Void)**:
-Status di mana sebuah Transaksi ditarik/dibatalkan namun riwayat catatannya tidak dihapus secara fisik (hard-delete) dari sistem. Transaksi yang dibatalkan tetap terlihat pada riwayat dengan visual dicoret, namun tidak dihitung dalam ringkasan dompet.
-_Avoid_: Hapus permanen, delete
+**Void**:
+A status where a Transaction is canceled/withdrawn but its record is not physically deleted (hard-delete) from the system. Voided transactions remain visible in the history with a strikethrough visual, but are not calculated in the wallet summary.
+_Avoid_: Pembatalan, hapus permanen, delete
 
 **Tag**:
-Label penanda yang ditambahkan pada Transaksi untuk keperluan klasifikasi. Satu Transaksi dapat memiliki lebih dari satu Tag. Jika dihapus, Tag hanya "diarsipkan" sehingga transaksi lama tetap memilikinya.
+A classification label added to a Transaction. One Transaction can have multiple Tags. If deleted, a Tag is only "archived" so old transactions still retain it.
 _Avoid_: Kategori, label, folder
 
-**Pihak (Payee)**:
-Entitas kedua dalam sebuah transaksi (contoh: nama warung, toko, pemberi gaji). Memisahkan konsep Kategori (Tag) dari Lokasi/Merchant (Payee) agar analisis statistik tetap akurat.
-_Avoid_: Merchant, Toko, Vendor
+**Payee**:
+The second entity in a transaction (e.g., store name, employer). Separates the concept of Category (Tag) from Location/Merchant (Payee) to keep statistical analysis accurate.
+_Avoid_: Pihak, Merchant, Toko, Vendor

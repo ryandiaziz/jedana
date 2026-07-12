@@ -16,7 +16,7 @@ export default function Dashboard() {
   const { startDate, endDate, monthName, monthInputValue } = useMemo(() => {
     const start = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth(), 1).getTime();
     const end = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
-    const month = currentMonthDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    const month = currentMonthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     
     // YYYY-MM for <input type="month">
     const yyyy = currentMonthDate.getFullYear();
@@ -41,8 +41,8 @@ export default function Dashboard() {
   };
 
   const transactions = TransactionService.useRecentTransactions(startDate, endDate);
-  const validTransactions = transactions?.filter(t => !t.isVoided) || [];
-  const voidedTransactions = transactions?.filter(t => t.isVoided) || [];
+  const validTransactions = useMemo(() => transactions?.filter(t => !t.isVoided) || [], [transactions]);
+  const voidedTransactions = useMemo(() => transactions?.filter(t => t.isVoided) || [], [transactions]);
   const { income, expense, net } = TransactionService.useSummary(startDate, endDate);
 
   const formatCurrency = (amount: number) => {
@@ -66,12 +66,12 @@ export default function Dashboard() {
       if (!groups[dateKey]) {
         // Build pretty label
         const today = new Date();
-        let label = d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        let label = d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         
         if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) {
-          label = `Hari ini, ${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}`;
+          label = `Today, ${d.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })}`;
         } else if (d.getDate() === today.getDate() - 1 && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) {
-          label = `Kemarin, ${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}`;
+          label = `Yesterday, ${d.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })}`;
         }
         
         groups[dateKey] = {
@@ -108,7 +108,7 @@ export default function Dashboard() {
             <div className="relative group">
               <h2 
                 onClick={() => {
-                  try { monthInputRef.current?.showPicker(); } catch (e) { /* fallback for unsupported browsers */ }
+                  try { monthInputRef.current?.showPicker(); } catch { /* fallback for unsupported browsers */ }
                 }}
                 className="text-2xl md:text-3xl font-bold tracking-tight cursor-pointer group-hover:text-primary transition-colors"
               >
@@ -120,7 +120,7 @@ export default function Dashboard() {
                 value={monthInputValue}
                 onChange={handleMonthChange}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full pointer-events-none"
-                title="Pilih Bulan"
+                title="Select Month"
               />
             </div>
 
@@ -128,14 +128,14 @@ export default function Dashboard() {
               <ChevronRight size={20} />
             </button>
           </div>
-          <p className="text-muted-foreground text-sm font-medium">Aliran dana dari semua dompet</p>
+          <p className="text-muted-foreground text-sm font-medium">Cash flow from all wallets</p>
         </div>
         <button 
           onClick={() => { setSelectedTx(undefined); setFormType('EXPENSE'); setShowForm(true); }}
           className="bg-foreground text-background flex items-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
         >
           <Plus size={18} />
-          Catat Transaksi
+          New Transaction
         </button>
       </header>
 
@@ -145,7 +145,7 @@ export default function Dashboard() {
           <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
             <WalletIcon size={80} />
           </div>
-          <span className="text-sm font-medium text-muted-foreground">Sisa Dana (Net)</span>
+          <span className="text-sm font-medium text-muted-foreground">Net Balance</span>
           <span className={cn("text-4xl font-bold tracking-tight", net >= 0 ? "text-foreground" : "text-destructive")}>
             {formatCurrency(net)}
           </span>
@@ -156,7 +156,7 @@ export default function Dashboard() {
             <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center">
               <ArrowDown size={12} className="text-success" />
             </div>
-            Total Pemasukan
+            Total Income
           </span>
           <span className="text-2xl font-bold tracking-tight">
             {formatCurrency(income)}
@@ -168,7 +168,7 @@ export default function Dashboard() {
             <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center">
               <ArrowUp size={12} className="text-destructive" />
             </div>
-            Total Pengeluaran
+            Total Expense
           </span>
           <span className="text-2xl font-bold tracking-tight">
             {formatCurrency(expense)}
@@ -178,24 +178,24 @@ export default function Dashboard() {
 
       {/* Transaction List */}
       <div className="flex flex-col gap-4">
-        <h3 className="font-semibold text-lg tracking-tight">Riwayat Transaksi</h3>
+        <h3 className="font-semibold text-lg tracking-tight">Transaction History</h3>
         
         {!transactions ? (
-          <div className="text-muted-foreground text-sm animate-pulse">Memuat data...</div>
+          <div className="text-muted-foreground text-sm animate-pulse">Loading data...</div>
         ) : validTransactions.length === 0 ? (
           <div className="bg-card border border-border border-dashed rounded-xl p-10 flex flex-col items-center justify-center text-center gap-3">
             <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
               <WalletIcon size={28} className="text-muted-foreground" />
             </div>
             <div>
-              <p className="font-medium text-lg">Belum ada transaksi</p>
-              <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">Mulai catat pemasukan atau pengeluaran pertamamu untuk melacak jejak dana di bulan ini.</p>
+              <p className="font-medium text-lg">No transactions</p>
+              <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">Start recording your first income or expense to track your cash flow this month.</p>
             </div>
             <button 
               onClick={() => { setSelectedTx(undefined); setFormType('EXPENSE'); setShowForm(true); }}
               className="mt-2 text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors"
             >
-              Mulai mencatat
+              Start tracking
             </button>
           </div>
         ) : (
@@ -227,10 +227,10 @@ export default function Dashboard() {
                           {tx.type === 'INCOME' ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-medium text-base">{tx.note || (tx.type === 'INCOME' ? 'Pemasukan' : 'Pengeluaran')}</span>
+                          <span className="font-medium text-base">{tx.note || (tx.type === 'INCOME' ? 'Income' : 'Expense')}</span>
                           <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                              {new Date(tx.date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                              {new Date(tx.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                             {tx.tags && tx.tags.length > 0 && (
                               <>
@@ -265,7 +265,7 @@ export default function Dashboard() {
       {/* Voided Transactions */}
       {voidedTransactions.length > 0 && (
         <div className="flex flex-col gap-4 mt-8 pt-6 border-t border-border border-dashed">
-          <h3 className="font-semibold text-lg tracking-tight text-muted-foreground">Transaksi Dibatalkan</h3>
+          <h3 className="font-semibold text-lg tracking-tight text-muted-foreground">Voided Transactions</h3>
           <div className="flex flex-col gap-3 opacity-50">
             {voidedTransactions.map(tx => (
               <div 
@@ -278,10 +278,10 @@ export default function Dashboard() {
                     {tx.type === 'INCOME' ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-medium text-base line-through">{tx.note || (tx.type === 'INCOME' ? 'Pemasukan' : 'Pengeluaran')}</span>
+                    <span className="font-medium text-base line-through">{tx.note || (tx.type === 'INCOME' ? 'Income' : 'Expense')}</span>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs font-medium text-muted-foreground">
-                        {new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(tx.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
                     </div>
                   </div>

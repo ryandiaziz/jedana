@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { TransactionService, type TransactionWithTags } from '../services/transaction.service';
 import { WalletService } from '../services/wallet.service';
 import { TagService } from '../services/tag.service';
@@ -23,7 +23,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
     return d.toISOString().slice(0, 16);
   };
 
-  const [dateStr, setDateStr] = useState(toDatetimeLocal(initialData ? initialData.date : Date.now()));
+  const [dateStr, setDateStr] = useState(() => toDatetimeLocal(initialData ? initialData.date : Date.now()));
   const [payee, setPayee] = useState(initialData?.payee || '');
   const [note, setNote] = useState(initialData?.note || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData ? initialData.tags.map(t => t.name) : []);
@@ -35,11 +35,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
 
   const [walletId, setWalletId] = useState<string | ''>(initialData?.walletId || '');
 
-  useEffect(() => {
-    if (wallets && wallets.length > 0 && walletId === '') {
-      setWalletId(wallets[0].id!);
-    }
-  }, [wallets, walletId]);
+  const effectiveWalletId = walletId || (wallets && wallets.length > 0 ? wallets[0].id! : '');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,7 +43,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
 
     try {
       const data = {
-        walletId: walletId === '' ? undefined : walletId,
+        walletId: effectiveWalletId === '' ? undefined : effectiveWalletId,
         type,
         amount: Number(amount),
         date: new Date(dateStr).getTime(),
@@ -72,7 +68,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
       <div className="bg-card border border-border w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center p-4 border-b border-border">
           <h2 className="font-semibold">
-            {initialData ? (initialData.isVoided ? 'Detail Transaksi (Dibatalkan)' : 'Edit Transaksi') : 'Catat Transaksi'}
+            {initialData ? (initialData.isVoided ? 'Transaction Details (Voided)' : 'Edit Transaction') : 'New Transaction'}
           </h2>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
             <X size={20} />
@@ -90,7 +86,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                 type === 'EXPENSE' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              Pengeluaran
+              Expense
             </button>
             <button
               type="button"
@@ -100,15 +96,15 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                 type === 'INCOME' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              Pemasukan
+              Income
             </button>
           </div>
 
           {wallets && wallets.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Pilih Dompet</label>
+              <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Select Wallet</label>
               <select 
-                value={walletId} 
+                value={effectiveWalletId} 
                 onChange={e => setWalletId(e.target.value)}
                 className="w-full bg-background border border-border rounded-md px-3 py-2 focus:outline-none focus:border-primary transition-colors"
                 required
@@ -121,7 +117,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Jumlah (Rp)</label>
+            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Amount</label>
             <input
               type="number"
               required
@@ -133,7 +129,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Waktu Transaksi</label>
+            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Date & Time</label>
             <input
               type="datetime-local"
               required
@@ -144,8 +140,8 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           </div>
 
           <SmartInput
-            label="Lokasi / Pihak (Merchant)"
-            placeholder="Contoh: Warung Buk Ida, SPBU"
+            label="Location / Payee"
+            placeholder="e.g., Walmart, Gas Station"
             value={payee}
             onChange={setPayee}
             options={allPayees || []}
@@ -153,8 +149,8 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           />
 
           <SmartInput
-            label="Catatan"
-            placeholder="Makan siang, bensin, dll"
+            label="Note"
+            placeholder="Lunch, gas, etc."
             value={note}
             onChange={setNote}
             options={payee ? (frequentNotes || []) : []}
@@ -176,33 +172,33 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
               <button 
                 type="button" 
                 onClick={async () => {
-                  if (confirm('Tandai transaksi ini sebagai batal? Transaksi akan dicoret dan tidak dihitung di ringkasan.')) {
+                  if (confirm('Mark this transaction as void? It will be crossed out and excluded from summaries.')) {
                     await TransactionService.voidTransaction(initialData.id!);
                     onClose();
                   }
                 }}
                 className="w-1/3 bg-destructive/10 text-destructive font-medium py-2.5 rounded-md hover:bg-destructive/20 transition-colors"
               >
-                Hapus (Void)
+                Void
               </button>
             )}
             {initialData?.isVoided && (
               <button 
                 type="button" 
                 onClick={async () => {
-                  if (confirm('Pulihkan transaksi ini ke riwayat utama?')) {
+                  if (confirm('Restore this transaction to the main history?')) {
                     await TransactionService.restoreTransaction(initialData.id!);
                     onClose();
                   }
                 }}
                 className="flex-1 bg-foreground text-background font-medium py-2.5 rounded-md hover:opacity-90 transition-opacity"
               >
-                Pulihkan Transaksi
+                Restore Transaction
               </button>
             )}
             {!initialData?.isVoided && (
               <button type="submit" className="flex-1 bg-primary text-primary-foreground font-medium py-2.5 rounded-md hover:opacity-90 transition-opacity">
-                Simpan
+                Save
               </button>
             )}
           </div>

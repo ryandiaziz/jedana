@@ -41,7 +41,7 @@ export default function Statistics() {
   }, [rawTransactions, typeFilter, walletFilter]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
 
   // --- Data for Donut Chart (Group by Tag) ---
@@ -66,7 +66,7 @@ export default function Statistics() {
       .sort((a, b) => b.value - a.value);
       
     if (untagged > 0) {
-      data.push({ name: 'Tanpa Tag', value: untagged });
+      data.push({ name: 'Untagged', value: untagged });
     }
     return data;
   }, [validTransactions]);
@@ -85,11 +85,11 @@ export default function Statistics() {
       if (period === 'MONTH') {
         // Group by day
         key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-        label = `${d.getDate()} ${d.toLocaleDateString('id-ID', { month: 'short' })}`;
+        label = `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'short' })}`;
       } else {
         // Group by month
         key = `${d.getFullYear()}-${d.getMonth()}`;
-        label = d.toLocaleDateString('id-ID', { month: 'short', year: period === 'ALL' ? '2-digit' : undefined });
+        label = d.toLocaleDateString('en-US', { month: 'short', year: period === 'ALL' ? '2-digit' : undefined });
       }
 
       if (!groups[key]) {
@@ -106,9 +106,9 @@ export default function Statistics() {
   const COLORS = ['#ffffff', '#e4e4e7', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#27272a'];
 
   const seedDummyData = async () => {
-    if (!confirm('Ini akan meng-generate ratusan data dummy untuk 2025-2026. Lanjutkan?')) return;
-    const tagsExpense = ['Makanan', 'Transportasi', 'Hiburan', 'Belanja', 'Tagihan', 'Bensin'];
-    const tagsIncome = ['Gaji', 'Bonus', 'Freelance', 'Investasi'];
+    if (!confirm('This will generate hundreds of dummy data for 2025-2026. Continue?')) return;
+    const tagsExpense = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Gas'];
+    const tagsIncome = ['Salary', 'Bonus', 'Freelance', 'Investment'];
     
     for (let year = 2025; year <= 2026; year++) {
       const maxMonth = year === 2026 ? 6 : 11;
@@ -144,19 +144,19 @@ export default function Statistics() {
         }
       }
     }
-    alert('Selesai! Data dummy telah disuntikkan.');
+    alert('Done! Dummy data has been injected.');
   };
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
       <header className="flex flex-row justify-between items-start">
         <div className="flex flex-col gap-1">
-          <h2 className="text-3xl font-bold tracking-tight">Statistik</h2>
-          <p className="text-muted-foreground text-sm font-medium">Analisis visual aliran dana Anda</p>
+          <h2 className="text-3xl font-bold tracking-tight">Statistics</h2>
+          <p className="text-muted-foreground text-sm font-medium">Visual analysis of your cash flow</p>
         </div>
         <button onClick={seedDummyData} className="flex items-center gap-2 px-3 py-1.5 bg-muted hover:bg-muted/80 text-xs font-semibold rounded-md text-muted-foreground transition-colors">
           <Wand2 size={14} />
-          Suntik Dummy
+          Inject Dummy
         </button>
       </header>
 
@@ -169,7 +169,7 @@ export default function Statistics() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Rentang Waktu</label>
+            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Time Range</label>
             <div className="flex bg-muted rounded-md p-1">
               {(['MONTH', 'YEAR', 'ALL'] as const).map(p => (
                 <button
@@ -180,7 +180,7 @@ export default function Statistics() {
                     period === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {p === 'MONTH' ? 'Bulan' : p === 'YEAR' ? 'Tahun' : 'Semua'}
+                  {p === 'MONTH' ? 'Month' : p === 'YEAR' ? 'Year' : 'All'}
                 </button>
               ))}
             </div>
@@ -200,32 +200,32 @@ export default function Statistics() {
                   }
                 }}
                 className="mt-2 w-full bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary transition-colors"
-                title="Pilih Waktu"
+                title="Select Time"
               />
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Jenis Transaksi</label>
+            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Transaction Type</label>
             <select 
               value={typeFilter} 
               onChange={e => setTypeFilter(e.target.value as any)}
               className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-[38px]"
             >
-              <option value="ALL">Semua Jenis</option>
-              <option value="EXPENSE">Pengeluaran Saja</option>
-              <option value="INCOME">Pemasukan Saja</option>
+              <option value="ALL">All Types</option>
+              <option value="EXPENSE">Expense Only</option>
+              <option value="INCOME">Income Only</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Dompet</label>
+            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Wallet</label>
             <select 
               value={walletFilter} 
               onChange={e => setWalletFilter(e.target.value)}
               className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-[38px]"
             >
-              <option value="ALL">Semua Dompet</option>
+              <option value="ALL">All Wallets</option>
               {wallets.map(w => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
@@ -237,7 +237,7 @@ export default function Statistics() {
       {validTransactions.length === 0 ? (
         <div className="bg-card border border-border border-dashed p-12 rounded-xl text-center flex flex-col items-center justify-center gap-2 text-muted-foreground">
           <PieIcon size={32} className="opacity-50" />
-          <p className="text-sm mt-2">Tidak ada data transaksi untuk kriteria filter ini.</p>
+          <p className="text-sm mt-2">No transaction data for these filter criteria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -245,7 +245,7 @@ export default function Statistics() {
           <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-6 hover:border-muted-foreground/30 transition-colors">
             <div className="flex items-center gap-2 font-semibold">
               <PieIcon size={18} />
-              Komposisi per Tag
+              Composition by Tag
             </div>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -279,7 +279,7 @@ export default function Statistics() {
           <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-6 hover:border-muted-foreground/30 transition-colors">
             <div className="flex items-center gap-2 font-semibold">
               <BarChart3 size={18} />
-              Tren {typeFilter === 'INCOME' ? 'Pemasukan' : typeFilter === 'EXPENSE' ? 'Pengeluaran' : 'Aktivitas'}
+              Trend - {typeFilter === 'INCOME' ? 'Income' : typeFilter === 'EXPENSE' ? 'Expense' : 'Activity'}
             </div>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -296,11 +296,11 @@ export default function Statistics() {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 12, fill: '#a1a1aa' }}
-                    tickFormatter={(value) => `Rp${(value / 1000)}k`}
+                    tickFormatter={(value) => `IDR ${(value / 1000)}k`}
                     width={80}
                   />
                   <Tooltip 
-                    formatter={(value: any, name: any) => [formatCurrency(Number(value) || 0), name === 'income' ? 'Pemasukan' : 'Pengeluaran']}
+                    formatter={(value: any, name: any) => [formatCurrency(Number(value) || 0), name === 'income' ? 'Income' : 'Expense']}
                     cursor={{ fill: '#27272a' }}
                     contentStyle={{ borderRadius: '8px', border: '1px solid #27272a', backgroundColor: '#09090b', color: '#ffffff' }}
                     itemStyle={{ color: '#ffffff' }}
