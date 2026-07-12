@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2 } from 'lucide-react';
+import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../db/db';
@@ -20,6 +20,19 @@ export default function Sidebar() {
       localStorage.removeItem('lastSyncTime');
       
       // Force reload to clear all states
+      window.location.reload();
+    }
+  };
+
+  const handleResetSync = async () => {
+    if (window.confirm("Fitur ini akan menghapus data lokal yang mungkin bermasalah dan mengunduh ulang seluruh riwayat transaksi Anda langsung dari server. Lanjutkan?")) {
+      // Wipe IndexedDB Data
+      await Promise.all(db.tables.map(table => table.clear()));
+      
+      // Wipe localStorage sync state
+      localStorage.removeItem('lastSyncTime');
+      
+      // Force reload to trigger a fresh sync on boot without logging out
       window.location.reload();
     }
   };
@@ -90,6 +103,16 @@ export default function Sidebar() {
               </span>
               {!isSidebarOpen && <Cloud size={18} className="text-primary mx-auto" />}
             </div>
+            
+            <button 
+              onClick={handleResetSync}
+              title="Tarik Ulang Data (Force Pull)" 
+              className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium text-blue-500 hover:bg-blue-500/10 cursor-pointer"
+            >
+              <RefreshCw size={18} className="shrink-0" />
+              {isSidebarOpen && <span className="truncate">Tarik Ulang Data</span>}
+            </button>
+
             <button 
               onClick={handleLogout}
               title="Logout & Wipe Data" 

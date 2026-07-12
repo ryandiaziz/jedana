@@ -166,16 +166,19 @@ export class SyncService {
       for (const key in row) {
         const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
 
+        // Convert null to undefined to prevent IndexedDB DataError on indexed fields
+        const val = row[key] === null ? undefined : row[key];
+
         // node-postgres returns BIGINT and NUMERIC as strings. Convert them to numbers.
         if (camelKey === 'amount' || camelKey === 'date') {
-          newObj[camelKey] = Number(row[key]);
+          newObj[camelKey] = val !== undefined ? Number(val) : undefined;
         } else if (camelKey === 'createdAt' || camelKey === 'updatedAt') {
           // node-postgres returns Date objects for TIMESTAMP columns. Frontend expects numbers.
-          newObj[camelKey] = row[key]
-            ? new Date(row[key] as string | number | Date).getTime()
+          newObj[camelKey] = val
+            ? new Date(val as string | number | Date).getTime()
             : undefined;
         } else {
-          newObj[camelKey] = row[key];
+          newObj[camelKey] = val;
         }
       }
       return newObj;
