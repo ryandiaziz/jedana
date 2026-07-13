@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { syncService } from '../services/SyncService';
+import { syncService } from '../features/sync/services/SyncService';
 
 type User = {
   id: string;

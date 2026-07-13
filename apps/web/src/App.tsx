@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './components/ThemeProvider';
-import Sidebar from './components/Sidebar';
+import { ThemeProvider } from './context/ThemeContext';
+import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Wallets from './pages/Wallets';
 import Tags from './pages/Tags';
 import Statistics from './pages/Statistics';
 
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (

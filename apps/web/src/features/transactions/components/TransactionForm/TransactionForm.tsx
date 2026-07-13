@@ -1,11 +1,11 @@
 import { useState, type SubmitEvent } from 'react';
-import { TransactionService, type TransactionWithTags } from '../services/transaction.service';
-import { WalletService } from '../services/wallet.service';
-import { TagService } from '../services/tag.service';
-import { cn } from '../lib/utils';
+import { TransactionService, type TransactionWithTags } from '../../services/transaction.service';
+import { WalletService } from '../../../wallets/services/wallet.service';
+import { TagService } from '../../../tags/services/tag.service';
+import { cn } from '../../../../utils/cn';
 import { X } from 'lucide-react';
-import { SmartInput } from './ui/SmartInput';
-import { SmartTagsInput } from './ui/SmartTagsInput';
+import { SmartInput } from '../../../../components/common/SmartInput';
+import { SmartTagsInput } from '../../../../components/common/SmartTagsInput';
 
 interface TransactionFormProps {
   onClose: () => void;

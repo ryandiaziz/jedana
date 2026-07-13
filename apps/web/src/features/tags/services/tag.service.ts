@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type Tag } from '../db/db';
+import { db, type Tag } from '../../../db/db';
 
 export const TagService = {
   /**

@@ -1,5 +1,5 @@
 import { useState, type SubmitEvent } from 'react';
-import { WalletService } from '../services/wallet.service';
+import { WalletService } from '../../features/wallets/services/wallet.service';
 import { Wallet as WalletIcon, Plus } from 'lucide-react';
 
 export default function Wallets() {

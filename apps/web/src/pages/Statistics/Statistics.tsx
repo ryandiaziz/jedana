@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import { TransactionService } from '../services/transaction.service';
-import { WalletService } from '../services/wallet.service';
+import { TransactionService } from '../../features/transactions/services/transaction.service';
+import { WalletService } from '../../features/wallets/services/wallet.service';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { cn } from '../lib/utils';
+import { cn } from '../../utils/cn';
 import { Filter, PieChart as PieIcon, BarChart3, Wand2 } from 'lucide-react';
 
 export default function Statistics() {

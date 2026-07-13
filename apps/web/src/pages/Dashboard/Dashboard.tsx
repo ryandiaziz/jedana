@@ -1,8 +1,8 @@
 import { useState, useMemo, useRef } from 'react';
 import { Plus, ArrowDown, ArrowUp, Wallet as WalletIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import TransactionForm from '../components/TransactionForm';
-import { TransactionService, type TransactionWithTags } from '../services/transaction.service';
-import { cn } from '../lib/utils';
+import TransactionForm from '../../features/transactions/components/TransactionForm';
+import { TransactionService, type TransactionWithTags } from '../../features/transactions/services/transaction.service';
+import { cn } from '../../utils/cn';
 
 export default function Dashboard() {
   const [showForm, setShowForm] = useState(false);

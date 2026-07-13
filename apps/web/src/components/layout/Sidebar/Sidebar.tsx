@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
-import { useAuth } from '../contexts/AuthContext';
-import { db } from '../db/db';
+import ThemeToggle from '../../common/ThemeToggle';
+import { useAuth } from '../../../context/AuthContext';
+import { db } from '../../../db/db';
 
 export default function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);

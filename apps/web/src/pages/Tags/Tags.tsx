@@ -1,4 +1,4 @@
-import { TagService } from '../services/tag.service';
+import { TagService } from '../../features/tags/services/tag.service';
 import { Archive, ArchiveRestore } from 'lucide-react';
 
 export default function Tags() {

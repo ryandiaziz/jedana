@@ -1,0 +1,1 @@
+export { SmartTagsInput } from './SmartTagsInput';

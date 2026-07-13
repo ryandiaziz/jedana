@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type Transaction, type Tag } from '../db/db';
+import { db, type Transaction, type Tag } from '../../../db/db';
 
 export type TransactionWithTags = Transaction & { tags: Tag[] };
 

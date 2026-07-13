@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type Wallet } from '../db/db';
+import { db, type Wallet } from '../../../db/db';
 
 export const WalletService = {
   /**
