@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type SubmitEvent } from 'react';
 import { WalletService } from '../services/wallet.service';
 import { Wallet as WalletIcon, Plus } from 'lucide-react';
 
@@ -6,7 +6,7 @@ export default function Wallets() {
   const wallets = WalletService.useWallets();
   const [newWalletName, setNewWalletName] = useState('');
 
-  const handleAddWallet = async (e: FormEvent) => {
+  const handleAddWallet = async (e: SubmitEvent) => {
     e.preventDefault();
     if (!newWalletName.trim()) return;
 

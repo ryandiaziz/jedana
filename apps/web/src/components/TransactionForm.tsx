@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type SubmitEvent } from 'react';
 import { TransactionService, type TransactionWithTags } from '../services/transaction.service';
 import { WalletService } from '../services/wallet.service';
 import { TagService } from '../services/tag.service';
@@ -37,7 +37,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
 
   const effectiveWalletId = walletId || (wallets && wallets.length > 0 ? wallets[0].id! : '');
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     if (!amount || isNaN(Number(amount))) return;
 
