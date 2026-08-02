@@ -1,4 +1,4 @@
-# 5. Strategi Deployment Self-Hosted Single VPS via Docker Compose
+# 5. Strategi Deployment Single VPS via Docker Compose & Shared PostgreSQL
 
 Date: 2026-08-02
 
@@ -8,17 +8,17 @@ Accepted
 
 ## Context
 
-Untuk rilis produksi awal Jedana, diperlukan arsitektur deployment yang sederhana, hemat biaya, namun terisolasi dan mudah direplikasi tanpa ketergantungan pada vendor PaaS spesifik.
+Pada VPS produksi yang meng-host banyak projek sekaligus, menjalankan kontainer PostgreSQL dedicated untuk setiap projek akan boros penggunaan RAM. Diperlukan arsitektur deployment yang efisien RAM di mana Jedana terhubung ke instansi PostgreSQL terpusat (shared instance) di VPS melalui Docker external network.
 
 ## Decision
 
-Kita mengadopsi strategi deployment **Self-Hosted Single VPS** menggunakan **Docker Compose** yang mengorkestrasi tiga kontainer utama:
+Kita mengadopsi strategi deployment **Self-Hosted Single VPS dengan Shared PostgreSQL**:
 
-1. **Nginx Reverse Proxy & Static Web Server**: Bertindak sebagai *entrypoint* (port 80/443 dengan SSL via Certbot/Let's Encrypt). Melayani build statis React (`apps/web/dist`) dan memproksi request `/api/*` ke kontainer NestJS Backend.
-2. **NestJS Server Container**: Menjalankan image Node.js ter-build dari `apps/server`. Menjalankan skrip `npm run start:prod` yang otomatis melakukan `migrate:up` pada database PostgreSQL sebelum aplikasi NestJS listen.
-3. **PostgreSQL Database Container**: Menjalankan service PostgreSQL 16 dengan *persistent volume mount* untuk menjamin ketahanan data.
+1. **Shared PostgreSQL Container**: Menggunakan instansi PostgreSQL terpusat di VPS yang terhubung ke jaringan Docker eksternal `shared_net`. Database `jedana_db` dan user `jedana_user` dibuat secara spesifik di dalam instansi PostgreSQL bersama ini.
+2. **NestJS Server Container**: Menjalankan kontainer NestJS ter-build yang tersambung ke `shared_net` dan otomatis mengeksekusi `npm run migrate:up` ke `DATABASE_URL` terpusat sebelum server listen.
+3. **Nginx Reverse Proxy & Static Web Server**: Melayani file statis frontend React (`apps/web/dist`) dan memproksi request `/api/*` ke `jedana_server`.
 
 ## Consequences
 
-- **Positif**: Seluruh stack aplikasi berada dalam 1 file `docker-compose.yml`, meminimalkan latency jaringan antara API & DB, serta mempermudah pemeliharaan dan pengujian staging lokal.
-- **Negatif**: Membutuhkan manajemen backup database PostgreSQL secara mandiri (via cron pg_dump) dan kapasitas resource VPS terbatas sesuai spesifikasi server.
+- **Positif**: Menghemat efisiensi penggunaan RAM secara signifikan pada VPS multi-project (menghindari duplikasi proses Postgres di memori).
+- **Negatif**: Membutuhkan pembuatan Docker network eksternal `shared_net` dan pembuatan database `jedana_db` di instansi PostgreSQL terpusat sebelum kontainer Jedana dijalankan.
