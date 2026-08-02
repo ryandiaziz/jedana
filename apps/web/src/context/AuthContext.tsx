@@ -1,22 +1,14 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { syncService } from '../features/sync/services/SyncService';
-
-type User = {
-  id: string;
-  email: string;
-};
-
-type AuthContextType = {
-  user: User | null;
-  isLoading: boolean;
-  logout: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { db } from '../db/db';
+import { LogoutConfirmModal } from '../components/common/LogoutConfirmModal';
+import { AuthContext, type User } from './authContextInstance';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -36,26 +28,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const logout = async () => {
+  const logout = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const closeLogoutModal = () => {
+    if (!isLoggingOut) {
+      setIsLogoutModalOpen(false);
+    }
+  };
+
+  const confirmLogout = async () => {
+    setIsLoggingOut(true);
     try {
+      // 1. Physically wipe all IndexedDB tables for privacy security (CONTEXT.md)
+      await Promise.all(db.tables.map(table => table.clear()));
+      localStorage.removeItem('lastSyncTime');
+
+      // 2. Clear server auth cookie
       await fetch('/api/auth/logout');
       setUser(null);
     } catch (e) {
-      console.error('Failed to logout', e);
+      console.error('Failed during logout data wipe:', e);
+    } finally {
+      setIsLoggingOut(false);
+      setIsLogoutModalOpen(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        logout,
+        confirmLogout,
+        closeLogoutModal,
+        isLogoutModalOpen,
+      }}
+    >
       {children}
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={closeLogoutModal}
+        onConfirm={confirmLogout}
+        isLoading={isLoggingOut}
+      />
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

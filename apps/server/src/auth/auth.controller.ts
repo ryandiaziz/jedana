@@ -36,8 +36,8 @@ export class AuthController {
     });
 
     // Redirect to frontend
-    // Assuming frontend runs on 5173
-    return res.redirect('http://localhost:5173/');
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173/';
+    return res.redirect(frontendUrl);
   }
 
   @Get('me')

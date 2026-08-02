@@ -2,26 +2,15 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw } from 'lucide-react';
 import ThemeToggle from '../../common/ThemeToggle';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context';
 import { db } from '../../../db/db';
 
 export default function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { user, isLoading, logout } = useAuth();
 
-  const handleLogout = async () => {
-    if (window.confirm("Are you sure you want to log out? Warning: ALL local data on this device will be PHYSICALLY DELETED for your privacy.")) {
-      await logout();
-      
-      // Wipe IndexedDB Data
-      await Promise.all(db.tables.map(table => table.clear()));
-      
-      // Wipe localStorage sync state
-      localStorage.removeItem('lastSyncTime');
-      
-      // Force reload to clear all states
-      window.location.reload();
-    }
+  const handleLogout = () => {
+    logout();
   };
 
   const handleResetSync = async () => {
@@ -38,7 +27,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`bg-card border-b md:border-b-0 md:border-r border-border p-4 flex flex-col gap-6 md:h-screen md:sticky md:top-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? 'w-full md:w-64' : 'w-full md:w-[72px]'}`}>
+    <aside className={`bg-card border-b md:border-b-0 md:border-r border-border p-4 flex flex-col gap-6 md:h-screen md:sticky md:top-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? 'w-full md:w-64' : 'w-full md:w-18'}`}>
       <div className="flex items-center gap-2 px-1">
         {/* Desktop Logo */}
         <button 

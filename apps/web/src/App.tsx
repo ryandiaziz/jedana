@@ -6,7 +6,7 @@ import Wallets from './pages/Wallets';
 import Tags from './pages/Tags';
 import Statistics from './pages/Statistics';
 
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context';
 
 function App() {
   return (
