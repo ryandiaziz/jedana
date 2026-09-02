@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Wallets from './pages/Wallets';
 import Tags from './pages/Tags';
 import Statistics from './pages/Statistics';
+import Settings from './pages/Settings';
 
 import { AuthProvider } from './context';
 
@@ -24,6 +25,7 @@ function App() {
                   <Route path="/wallets" element={<Wallets />} />
                   <Route path="/tags" element={<Tags />} />
                   <Route path="/statistics" element={<Statistics />} />
+                  <Route path="/settings" element={<Settings />} />
                 </Routes>
               </div>
             </main>

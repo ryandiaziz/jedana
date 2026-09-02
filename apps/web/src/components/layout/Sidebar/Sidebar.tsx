@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw } from 'lucide-react';
+import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings } from 'lucide-react';
 import ThemeToggle from '../../common/ThemeToggle';
 import { useAuth } from '../../../context';
 import { db } from '../../../db/db';
@@ -75,6 +75,10 @@ export default function Sidebar() {
         <NavLink to="/tags" title="Tags & Archives" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
           <TagsIcon size={18} className="shrink-0" />
           {isSidebarOpen && <span className="truncate">Tags & Archives</span>}
+        </NavLink>
+        <NavLink to="/settings" title="Settings" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+          <Settings size={18} className="shrink-0" />
+          {isSidebarOpen && <span className="truncate">Settings</span>}
         </NavLink>
       </nav>
       <div className="mt-auto flex flex-col gap-4 border-t border-border pt-4">

@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from './app.module';
+import { AppModule, mcpStrategy } from './app.module';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
@@ -33,8 +33,17 @@ async function bootstrap() {
     }),
   );
 
+  // MCP Transport — attach HTTP adapter and connect as microservice
+  mcpStrategy.setHttpAdapter(app.getHttpAdapter());
+  app.connectMicroservice({ strategy: mcpStrategy });
+
+  // Start MCP microservice before HTTP server
+  await app.startAllMicroservices();
+
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   console.log(`[Jedana Server] Running on port ${port}`);
+  console.log(`[Jedana MCP] Endpoint available at /mcp`);
 }
 void bootstrap();
+
