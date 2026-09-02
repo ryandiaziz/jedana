@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "concurrently -c \"cyan,magenta\" -n \"WEB,SERVER\" \"npm run dev --workspace=apps/web\" \"npm run start:dev --workspace=apps/server\"",
     "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "migrate:up": "npm run migrate:up --workspace=apps/server",
+    "migrate:down": "npm run migrate:down --workspace=apps/server"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"
