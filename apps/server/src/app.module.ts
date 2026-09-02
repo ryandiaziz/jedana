@@ -8,7 +8,11 @@ import { AuthModule } from './auth/auth.module';
 import { SyncModule } from './sync/sync.module';
 import { McpModule } from './mcp/mcp.module';
 import { HealthController } from './health/health.controller';
-import { McpStrategy, MCP_STRATEGY, StreamableHttpTransport } from '@rekog/mcp-nest';
+import {
+  McpStrategy,
+  MCP_STRATEGY,
+  StreamableHttpTransport,
+} from '@rekog/mcp-nest';
 
 // MCP Strategy — exported so main.ts can attach the HTTP adapter
 export const mcpStrategy = new McpStrategy({
@@ -69,4 +73,3 @@ export const mcpStrategy = new McpStrategy({
   ],
 })
 export class AppModule {}
-

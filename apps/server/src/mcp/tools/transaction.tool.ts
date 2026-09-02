@@ -18,12 +18,19 @@ export class TransactionTool {
       walletId: z.string().uuid().describe('ID wallet tujuan transaksi'),
       type: z
         .enum(['INCOME', 'EXPENSE'])
-        .describe('Jenis transaksi: INCOME (pemasukan) atau EXPENSE (pengeluaran)'),
+        .describe(
+          'Jenis transaksi: INCOME (pemasukan) atau EXPENSE (pengeluaran)',
+        ),
       amount: z
         .number()
         .positive()
-        .describe('Jumlah uang dalam satuan terkecil (misal: 50000 untuk Rp50.000)'),
-      note: z.string().min(1).describe('Catatan/deskripsi transaksi, misal: "Makan siang"'),
+        .describe(
+          'Jumlah uang dalam satuan terkecil (misal: 50000 untuk Rp50.000)',
+        ),
+      note: z
+        .string()
+        .min(1)
+        .describe('Catatan/deskripsi transaksi, misal: "Makan siang"'),
       date: z
         .number()
         .optional()
@@ -33,7 +40,9 @@ export class TransactionTool {
       payee: z
         .string()
         .optional()
-        .describe('Nama pihak kedua dalam transaksi, misal: nama toko/merchant'),
+        .describe(
+          'Nama pihak kedua dalam transaksi, misal: nama toko/merchant',
+        ),
       tagIds: z
         .array(z.string().uuid())
         .optional()
@@ -57,7 +66,9 @@ export class TransactionTool {
     const userId = rawReq?.user?.id;
     if (!userId) {
       return {
-        content: [{ type: 'text' as const, text: 'Error: User not authenticated' }],
+        content: [
+          { type: 'text' as const, text: 'Error: User not authenticated' },
+        ],
         isError: true,
       };
     }
@@ -106,9 +117,19 @@ export class TransactionTool {
     description:
       'Melihat daftar transaksi keuangan. Bisa difilter berdasarkan wallet, rentang tanggal, dan jenis transaksi.',
     parameters: z.object({
-      walletId: z.string().uuid().optional().describe('Filter berdasarkan wallet ID'),
-      startDate: z.number().optional().describe('Filter mulai tanggal (Unix timestamp ms)'),
-      endDate: z.number().optional().describe('Filter sampai tanggal (Unix timestamp ms)'),
+      walletId: z
+        .string()
+        .uuid()
+        .optional()
+        .describe('Filter berdasarkan wallet ID'),
+      startDate: z
+        .number()
+        .optional()
+        .describe('Filter mulai tanggal (Unix timestamp ms)'),
+      endDate: z
+        .number()
+        .optional()
+        .describe('Filter sampai tanggal (Unix timestamp ms)'),
       type: z
         .enum(['INCOME', 'EXPENSE'])
         .optional()
@@ -136,7 +157,9 @@ export class TransactionTool {
     const userId = rawReq?.user?.id;
     if (!userId) {
       return {
-        content: [{ type: 'text' as const, text: 'Error: User not authenticated' }],
+        content: [
+          { type: 'text' as const, text: 'Error: User not authenticated' },
+        ],
         isError: true,
       };
     }
@@ -183,7 +206,10 @@ export class TransactionTool {
     description:
       'Membatalkan (void) transaksi. Transaksi yang di-void tidak dihapus, tapi tidak dihitung dalam saldo wallet.',
     parameters: z.object({
-      transactionId: z.string().uuid().describe('ID transaksi yang akan di-void'),
+      transactionId: z
+        .string()
+        .uuid()
+        .describe('ID transaksi yang akan di-void'),
     }),
   })
   async voidTransaction(
@@ -194,13 +220,18 @@ export class TransactionTool {
     const userId = rawReq?.user?.id;
     if (!userId) {
       return {
-        content: [{ type: 'text' as const, text: 'Error: User not authenticated' }],
+        content: [
+          { type: 'text' as const, text: 'Error: User not authenticated' },
+        ],
         isError: true,
       };
     }
 
     try {
-      const success = await this.mcpData.voidTransaction(userId, params.transactionId);
+      const success = await this.mcpData.voidTransaction(
+        userId,
+        params.transactionId,
+      );
 
       if (!success) {
         return {

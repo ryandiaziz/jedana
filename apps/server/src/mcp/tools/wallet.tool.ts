@@ -21,7 +21,9 @@ export class WalletTool {
     const userId = rawReq?.user?.id;
     if (!userId) {
       return {
-        content: [{ type: 'text' as const, text: 'Error: User not authenticated' }],
+        content: [
+          { type: 'text' as const, text: 'Error: User not authenticated' },
+        ],
         isError: true,
       };
     }
@@ -67,7 +69,11 @@ export class WalletTool {
       'Membuat wallet baru. Wallet adalah ruang pembukuan berdasarkan konsep "Envelope Budgeting", ' +
       'contoh: "Dana Harian", "Dana Darurat", "Dana Liburan".',
     parameters: z.object({
-      name: z.string().min(1).max(100).describe('Nama wallet, misal: "Dana Harian"'),
+      name: z
+        .string()
+        .min(1)
+        .max(100)
+        .describe('Nama wallet, misal: "Dana Harian"'),
     }),
   })
   async createWallet(
@@ -78,7 +84,9 @@ export class WalletTool {
     const userId = rawReq?.user?.id;
     if (!userId) {
       return {
-        content: [{ type: 'text' as const, text: 'Error: User not authenticated' }],
+        content: [
+          { type: 'text' as const, text: 'Error: User not authenticated' },
+        ],
         isError: true,
       };
     }

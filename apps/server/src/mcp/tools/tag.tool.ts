@@ -18,7 +18,9 @@ export class TagTool {
       includeArchived: z
         .boolean()
         .optional()
-        .describe('Jika true, tampilkan juga tag yang sudah diarsipkan. Default: false.'),
+        .describe(
+          'Jika true, tampilkan juga tag yang sudah diarsipkan. Default: false.',
+        ),
     }),
   })
   async listTags(
@@ -29,7 +31,9 @@ export class TagTool {
     const userId = rawReq?.user?.id;
     if (!userId) {
       return {
-        content: [{ type: 'text' as const, text: 'Error: User not authenticated' }],
+        content: [
+          { type: 'text' as const, text: 'Error: User not authenticated' },
+        ],
         isError: true,
       };
     }
@@ -78,15 +82,14 @@ export class TagTool {
       name: z.string().min(1).max(50).describe('Nama tag, misal: "Makanan"'),
     }),
   })
-  async createTag(
-    @Payload() params: { name: string },
-    @Ctx() ctx: McpContext,
-  ) {
+  async createTag(@Payload() params: { name: string }, @Ctx() ctx: McpContext) {
     const rawReq = ctx.getRawRequest<{ user?: { id: string } }>();
     const userId = rawReq?.user?.id;
     if (!userId) {
       return {
-        content: [{ type: 'text' as const, text: 'Error: User not authenticated' }],
+        content: [
+          { type: 'text' as const, text: 'Error: User not authenticated' },
+        ],
         isError: true,
       };
     }

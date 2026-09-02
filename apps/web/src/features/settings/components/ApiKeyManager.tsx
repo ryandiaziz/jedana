@@ -34,8 +34,33 @@ export default function ApiKeyManager() {
   }, []);
 
   useEffect(() => {
-    fetchKeys();
-  }, [fetchKeys]);
+    let ignore = false;
+
+    const load = async () => {
+      try {
+        const res = await fetch('/api/auth/api-keys');
+        if (!res.ok) throw new Error('Failed to fetch API keys');
+        const data = await res.json();
+        if (!ignore) {
+          setKeys(data);
+        }
+      } catch {
+        if (!ignore) {
+          setError('Gagal memuat API keys');
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

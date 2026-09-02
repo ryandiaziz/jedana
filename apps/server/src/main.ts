@@ -61,4 +61,3 @@ async function bootstrap() {
   console.log(`[Jedana MCP] Endpoint available at /mcp`);
 }
 void bootstrap();
-

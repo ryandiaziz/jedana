@@ -31,14 +31,17 @@ export class SummaryTool {
     }),
   })
   async getSummary(
-    @Payload() params: { walletId?: string; startDate?: number; endDate?: number },
+    @Payload()
+    params: { walletId?: string; startDate?: number; endDate?: number },
     @Ctx() ctx: McpContext,
   ) {
     const rawReq = ctx.getRawRequest<{ user?: { id: string } }>();
     const userId = rawReq?.user?.id;
     if (!userId) {
       return {
-        content: [{ type: 'text' as const, text: 'Error: User not authenticated' }],
+        content: [
+          { type: 'text' as const, text: 'Error: User not authenticated' },
+        ],
         isError: true,
       };
     }
