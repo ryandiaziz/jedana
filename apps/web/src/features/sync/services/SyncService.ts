@@ -57,7 +57,9 @@ class SyncEngine {
 
         for (const record of records) {
           const local = await table.get(record.id);
-          if (!local || new Date(record.updatedAt) >= new Date(local.updatedAt)) {
+          const localUpdated = local?.updatedAt ? new Date(local.updatedAt).getTime() : 0;
+          const serverUpdated = record.updatedAt ? new Date(record.updatedAt).getTime() : Date.now();
+          if (!local || serverUpdated >= localUpdated) {
             await table.put(record);
           }
         }

@@ -88,7 +88,16 @@ export class SyncService {
     try {
       await client.query('BEGIN');
 
-      for (const [key, records] of Object.entries(data)) {
+      // Process in dependency order: wallets -> tags -> transactions -> transaction_tags
+      const tableOrder = ['wallets', 'tags', 'transactions', 'transaction_tags'];
+      const sortedKeys = Object.keys(data).sort((a, b) => {
+        const idxA = tableOrder.indexOf(a);
+        const idxB = tableOrder.indexOf(b);
+        return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+      });
+
+      for (const key of sortedKeys) {
+        const records = data[key];
         const schema = SYNC_SCHEMA[key];
         if (!schema) {
           this.logger.warn(`No schema found for table key: ${key}`);
@@ -97,6 +106,77 @@ export class SyncService {
 
         if (Array.isArray(records) && records.length > 0) {
           for (const record of records) {
+            // ── Wallet Deduplication (Tombstone Pattern) ──
+            if (key === 'wallets') {
+              const isDel = record.isDeleted === true || record.is_deleted === true;
+              const walletName = typeof record.name === 'string' ? record.name.trim() : '';
+              const walletId = String(record.id);
+
+              if (!isDel && walletName) {
+                const existing = await client.query(
+                  `SELECT id FROM wallets
+                   WHERE user_id = $1 AND LOWER(name) = LOWER($2) AND is_deleted = FALSE AND id != $3
+                   LIMIT 1`,
+                  [userId, walletName, walletId],
+                );
+
+                if (existing?.rows && existing.rows.length > 0) {
+                  // Duplicate active wallet detected: persist client's ID as a tombstone
+                  // so FK constraints hold and client receives isDeleted: true on next pull.
+                  const now = this.toDate(record.updatedAt as number | undefined);
+                  const createdAt = this.toDate(record.createdAt as number | undefined);
+                  await client.query(
+                    `INSERT INTO wallets (id, user_id, name, is_deleted, created_at, updated_at)
+                     VALUES ($1, $2, $3, TRUE, $4, $5)
+                     ON CONFLICT (id) DO UPDATE SET is_deleted = TRUE, updated_at = EXCLUDED.updated_at`,
+                    [walletId, userId, walletName, createdAt, now],
+                  );
+                  continue;
+                }
+              }
+            }
+
+            // ── Stateless Transaction Validation & Remapping ──
+            if (key === 'transactions') {
+              const currentWalletId = String(record.walletId || record.wallet_id || '');
+              if (!currentWalletId) {
+                throw new Error('Transaction validation error: walletId is required.');
+              }
+
+              const targetWallet = await client.query(
+                `SELECT id, name, is_deleted FROM wallets WHERE id = $1 AND user_id = $2 LIMIT 1`,
+                [currentWalletId, userId],
+              );
+
+              if (!targetWallet?.rows || targetWallet.rows.length === 0) {
+                throw new Error(
+                  `Transaction validation error: Target wallet ID "${currentWalletId}" does not exist.`,
+                );
+              }
+
+              const walletRow = targetWallet.rows[0];
+              if (walletRow.is_deleted) {
+                // Target wallet is inactive (e.g. a tombstone from duplicate client wallet)
+                // Statelessly search for the active canonical wallet with the same name.
+                const activeWallet = await client.query(
+                  `SELECT id FROM wallets
+                   WHERE user_id = $1 AND LOWER(name) = LOWER($2) AND is_deleted = FALSE
+                   LIMIT 1`,
+                  [userId, walletRow.name],
+                );
+
+                if (activeWallet?.rows && activeWallet.rows.length > 0) {
+                  const canonicalId = activeWallet.rows[0].id;
+                  if (record.walletId !== undefined) record.walletId = canonicalId;
+                  if (record.wallet_id !== undefined) record.wallet_id = canonicalId;
+                } else {
+                  throw new Error(
+                    `Transaction validation error: Target wallet "${walletRow.name}" (${currentWalletId}) is inactive and has no active canonical counterpart.`,
+                  );
+                }
+              }
+            }
+
             // Build values array based on schema columns
             const values = schema.columns.map((col) => {
               if (col === 'user_id') return userId;
@@ -106,6 +186,9 @@ export class SyncService {
                 g[1].toUpperCase(),
               );
               let val = record[camelCol];
+              if (val === undefined && record[col] !== undefined) {
+                val = record[col];
+              }
 
               if (val === undefined) {
                 if (col === 'is_deleted' || col === 'is_archived') val = false;
@@ -137,7 +220,26 @@ export class SyncService {
               WHERE EXCLUDED.updated_at > ${schema.tableName}.updated_at
             `;
 
-            await client.query(query, values);
+            try {
+              await client.query(query, values);
+            } catch (err: unknown) {
+              const pgErr = err as { code?: string };
+              // Catch race-condition 23505 on wallets partial unique index
+              if (key === 'wallets' && pgErr?.code === '23505') {
+                const walletId = String(record.id);
+                const walletName = typeof record.name === 'string' ? record.name.trim() : '';
+                const now = this.toDate(record.updatedAt as number | undefined);
+                const createdAt = this.toDate(record.createdAt as number | undefined);
+                await client.query(
+                  `INSERT INTO wallets (id, user_id, name, is_deleted, created_at, updated_at)
+                   VALUES ($1, $2, $3, TRUE, $4, $5)
+                   ON CONFLICT (id) DO UPDATE SET is_deleted = TRUE, updated_at = EXCLUDED.updated_at`,
+                  [walletId, userId, walletName, createdAt, now],
+                );
+              } else {
+                throw err;
+              }
+            }
           }
         }
       }

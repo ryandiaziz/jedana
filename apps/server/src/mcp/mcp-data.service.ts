@@ -229,17 +229,53 @@ export class McpDataService {
   async createWallet(
     userId: string,
     name: string,
-  ): Promise<{ id: string; name: string }> {
+  ): Promise<{ id: string; name: string; isExisting?: boolean }> {
+    const trimmed = name.trim();
+    const existing = await this.pool.query(
+      `SELECT id, name FROM wallets
+       WHERE user_id = $1 AND LOWER(name) = LOWER($2) AND is_deleted = FALSE
+       LIMIT 1`,
+      [userId, trimmed],
+    );
+
+    if (existing.rows.length > 0) {
+      return {
+        id: existing.rows[0].id,
+        name: existing.rows[0].name,
+        isExisting: true,
+      };
+    }
+
     const id = randomUUID();
     const now = new Date();
 
-    await this.pool.query(
-      `INSERT INTO wallets (id, user_id, name, is_deleted, created_at, updated_at)
-       VALUES ($1, $2, $3, FALSE, $4, $4)`,
-      [id, userId, name, now],
-    );
+    try {
+      await this.pool.query(
+        `INSERT INTO wallets (id, user_id, name, is_deleted, created_at, updated_at)
+         VALUES ($1, $2, $3, FALSE, $4, $4)`,
+        [id, userId, trimmed, now],
+      );
 
-    return { id, name };
+      return { id, name: trimmed, isExisting: false };
+    } catch (err: unknown) {
+      const pgErr = err as { code?: string };
+      if (pgErr?.code === '23505') {
+        const existingAgain = await this.pool.query(
+          `SELECT id, name FROM wallets
+           WHERE user_id = $1 AND LOWER(name) = LOWER($2) AND is_deleted = FALSE
+           LIMIT 1`,
+          [userId, trimmed],
+        );
+        if (existingAgain.rows.length > 0) {
+          return {
+            id: existingAgain.rows[0].id,
+            name: existingAgain.rows[0].name,
+            isExisting: true,
+          };
+        }
+      }
+      throw err;
+    }
   }
 
   // ──────────────── Tags ────────────────
@@ -271,17 +307,53 @@ export class McpDataService {
   async createTag(
     userId: string,
     name: string,
-  ): Promise<{ id: string; name: string }> {
+  ): Promise<{ id: string; name: string; isExisting?: boolean }> {
+    const trimmed = name.trim();
+    const existing = await this.pool.query(
+      `SELECT id, name FROM tags
+       WHERE user_id = $1 AND LOWER(name) = LOWER($2) AND is_deleted = FALSE
+       LIMIT 1`,
+      [userId, trimmed],
+    );
+
+    if (existing.rows.length > 0) {
+      return {
+        id: existing.rows[0].id,
+        name: existing.rows[0].name,
+        isExisting: true,
+      };
+    }
+
     const id = randomUUID();
     const now = new Date();
 
-    await this.pool.query(
-      `INSERT INTO tags (id, user_id, name, is_archived, is_deleted, created_at, updated_at)
-       VALUES ($1, $2, $3, FALSE, FALSE, $4, $4)`,
-      [id, userId, name, now],
-    );
+    try {
+      await this.pool.query(
+        `INSERT INTO tags (id, user_id, name, is_archived, is_deleted, created_at, updated_at)
+         VALUES ($1, $2, $3, FALSE, FALSE, $4, $4)`,
+        [id, userId, trimmed, now],
+      );
 
-    return { id, name };
+      return { id, name: trimmed, isExisting: false };
+    } catch (err: unknown) {
+      const pgErr = err as { code?: string };
+      if (pgErr?.code === '23505') {
+        const existingAgain = await this.pool.query(
+          `SELECT id, name FROM tags
+           WHERE user_id = $1 AND LOWER(name) = LOWER($2) AND is_deleted = FALSE
+           LIMIT 1`,
+          [userId, trimmed],
+        );
+        if (existingAgain.rows.length > 0) {
+          return {
+            id: existingAgain.rows[0].id,
+            name: existingAgain.rows[0].name,
+            isExisting: true,
+          };
+        }
+      }
+      throw err;
+    }
   }
 
   // ──────────────── Summary ────────────────

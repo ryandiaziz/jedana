@@ -97,12 +97,16 @@ export class TagTool {
     try {
       const tag = await this.mcpData.createTag(userId, params.name);
 
+      const message = tag.isExisting
+        ? `Tag "${tag.name}" sudah ada. Menggunakan tag yang sudah ada.`
+        : `Tag "${tag.name}" berhasil dibuat.`;
+
       return {
         content: [
           {
             type: 'text' as const,
             text: JSON.stringify(
-              { message: `Tag "${params.name}" berhasil dibuat.`, tag },
+              { message, tag: { id: tag.id, name: tag.name } },
               null,
               2,
             ),

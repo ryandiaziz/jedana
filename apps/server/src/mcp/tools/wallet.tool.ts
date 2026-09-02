@@ -94,12 +94,16 @@ export class WalletTool {
     try {
       const wallet = await this.mcpData.createWallet(userId, params.name);
 
+      const message = wallet.isExisting
+        ? `Wallet "${wallet.name}" sudah ada. Menggunakan wallet yang sudah ada.`
+        : `Wallet "${wallet.name}" berhasil dibuat.`;
+
       return {
         content: [
           {
             type: 'text' as const,
             text: JSON.stringify(
-              { message: `Wallet "${params.name}" berhasil dibuat.`, wallet },
+              { message, wallet: { id: wallet.id, name: wallet.name } },
               null,
               2,
             ),

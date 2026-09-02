@@ -127,7 +127,7 @@ Saat AI Agent berinteraksi dengan pengguna, agent diarahkan mengikuti konvensi J
 
 | Konsep | Penjelasan | Yang Harus Dihindari |
 | :--- | :--- | :--- |
-| **Wallet** | Ruang alokasi anggaran (*Envelope Budgeting*), misal: "Dana Harian", "Tabungan Liburan". | Menganggap Wallet sebagai nomor rekening bank fisik. |
+| **Wallet** | Ruang alokasi anggaran (*Envelope Budgeting*), misal: "Dana Harian", "Dompet Utama". Selalu panggil `list_wallets` terlebih dahulu. | **Dilarang membuat wallet baru (`create_wallet`) secara otomatis** tanpa instruksi eksplisit dari pengguna. Jika nama wallet tidak ada/ambigu, tanyakan klarifikasi ke pengguna. |
 | **Payee** | Nama toko / merchant / instansi kedua (misal: "Indomaret", "PLN", "Starbucks"). | Memasukkan nama toko ke dalam Tag kategori. |
 | **Tag** | Klasifikasi transaksi (misal: "Makanan", "Transportasi", "Listrik"). | Menjadikan nama toko sebagai Tag. |
 | **Void** | Pembatalan transaksi (*soft-delete* dengan efek coret di riwayat). | Menghapus fisik baris data. |

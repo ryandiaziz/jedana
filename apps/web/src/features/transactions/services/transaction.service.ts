@@ -17,12 +17,13 @@ export const TransactionService = {
     let targetWalletId = data.walletId;
 
     if (!targetWalletId) {
-      const wallet = await db.wallets.limit(1).first();
+      const wallet = await db.wallets.filter((w) => !w.isDeleted).first();
       if (!wallet) {
         const newWalletId = crypto.randomUUID();
         await db.wallets.add({
           id: newWalletId,
           name: "Dompet Utama",
+          isDeleted: false,
           createdAt: now,
           updatedAt: now
         });
@@ -68,7 +69,7 @@ export const TransactionService = {
     let targetWalletId = data.walletId;
     
     if (!targetWalletId) {
-      const wallet = await db.wallets.limit(1).first();
+      const wallet = await db.wallets.filter((w) => !w.isDeleted).first();
       if (wallet) targetWalletId = wallet.id!;
     }
 

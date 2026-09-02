@@ -23,7 +23,11 @@ export const mcpStrategy = new McpStrategy({
   instructions:
     'You are interacting with Jedana (Jejak Dana), an offline-first personal financial management application.\n\n' +
     'CORE DOMAIN CONCEPTS & RULES:\n' +
-    '1. Wallets (Envelope Budgeting): A Wallet represents a virtual budgeting envelope/space (e.g., "Dana Harian", "Dana Liburan", "Dana Darurat"), NOT a physical bank account or ATM card.\n' +
+    '1. Wallets (Envelope Budgeting):\n' +
+    '   - A Wallet represents a virtual budgeting envelope/space (e.g., "Dana Harian", "Dana Liburan", "Dana Darurat"), NOT a physical bank account or ATM card.\n' +
+    '   - STRICT RULE: NEVER call create_wallet automatically unless the user EXPLICITLY instructs you to create a new wallet (e.g., "Buat wallet baru Liburan").\n' +
+    '   - When logging a transaction, ALWAYS call list_wallets first to match an existing wallet by name (case-insensitive).\n' +
+    '   - If there is only one wallet available, you may use it. If there are multiple wallets or the wallet name is ambiguous/not found, ALWAYS ask the user for clarification before recording the transaction.\n' +
     '2. Payee vs Tag Separation:\n' +
     '   - Payee: The second party, merchant, or store name in a transaction (e.g., "Starbucks", "Indomaret", "Kantor").\n' +
     '   - Tag: Classification label or category (e.g., "Makanan", "Transportasi", "Tagihan"). Always keep Payee (where/who) separate from Tag (what category).\n' +
@@ -34,7 +38,7 @@ export const mcpStrategy = new McpStrategy({
     '4. Voiding: Transactions are cancelled via void_transaction (soft cancellation). They remain in history but do not affect wallet balances.\n\n' +
     'RECOMMENDED AGENT INTERACTION WORKFLOW:\n' +
     '1. When user asks to log a transaction (e.g., "Catat makan siang 50rb"): \n' +
-    '   - If you do not have the walletId, call list_wallets first to pick or match the wallet (e.g. "Dana Harian" or default wallet).\n' +
+    '   - If you do not have the walletId, call list_wallets first to inspect available wallets and match the appropriate wallet.\n' +
     '   - Check list_tags to attach matching tagId(s) if relevant.\n' +
     '   - Call create_transaction with walletId, type, amount, note, and optional payee/tagIds.\n' +
     '2. When user asks about balances or finances (e.g., "Berapa sisa uang saya?", "Ringkasan bulan ini"): \n' +

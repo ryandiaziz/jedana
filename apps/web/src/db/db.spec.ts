@@ -71,4 +71,15 @@ describe('Dexie IndexedDB Storage', () => {
     expect(walletCount).toBe(0);
     expect(txCount).toBe(0);
   });
+
+  it('should filter out tombstoned/deleted wallets when querying active wallets', async () => {
+    await db.wallets.bulkPut([
+      { id: 'w-canon', name: 'Dompet Utama', isDeleted: false, createdAt: Date.now(), updatedAt: Date.now() },
+      { id: 'w-tomb', name: 'Dompet Utama', isDeleted: true, createdAt: Date.now(), updatedAt: Date.now() + 1000 },
+    ]);
+
+    const activeWallets = await db.wallets.filter(w => !w.isDeleted).toArray();
+    expect(activeWallets).toHaveLength(1);
+    expect(activeWallets[0].id).toBe('w-canon');
+  });
 });
