@@ -14,6 +14,13 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      // MCP endpoint ada di backend (:3000), bukan di Vite. Tanpa proxy ini,
+      // config MCP yang ditampilkan web (window.location.origin + "/mcp")
+      // akan 404 saat diakses dari dev server :5173.
+      '/mcp': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
 })

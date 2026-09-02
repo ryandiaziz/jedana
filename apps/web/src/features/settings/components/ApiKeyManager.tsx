@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Key, Plus, Trash2, Copy, Check, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Key, Plus, Trash2, Copy, Check, Loader2 } from 'lucide-react';
 
 interface ApiKey {
   id: string;

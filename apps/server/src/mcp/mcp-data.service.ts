@@ -68,7 +68,10 @@ export class McpDataService {
 
       const id = randomUUID();
       const now = new Date();
-      const txDate = input.date ? new Date(input.date) : now;
+      // Kolom transactions.date bertipe BIGINT (Unix epoch ms) — kirim angka
+      // langsung; jangan dibungkus Date (pg akan serialize jadi string ISO
+      // dan PostgreSQL menolaknya untuk tipe bigint).
+      const txDate = input.date ?? Date.now();
 
       await client.query(
         `INSERT INTO transactions (id, user_id, wallet_id, type, amount, date, note, payee, is_deleted, created_at, updated_at)
@@ -105,7 +108,7 @@ export class McpDataService {
         walletId: input.walletId,
         type: input.type,
         amount: input.amount,
-        date: txDate.getTime(),
+        date: txDate,
         note: input.note,
         payee: input.payee,
         isVoided: false,
@@ -144,11 +147,11 @@ export class McpDataService {
     }
     if (options.startDate) {
       conditions.push(`t.date >= $${paramIdx++}`);
-      params.push(new Date(options.startDate));
+      params.push(options.startDate);
     }
     if (options.endDate) {
       conditions.push(`t.date <= $${paramIdx++}`);
-      params.push(new Date(options.endDate));
+      params.push(options.endDate);
     }
 
     const limit = Math.min(options.limit || 20, 100);
@@ -170,7 +173,9 @@ export class McpDataService {
       walletId: row.wallet_id,
       type: row.type,
       amount: Number(row.amount),
-      date: new Date(row.date).getTime(),
+      // row.date: bigint epoch-ms dikembalikan pg sebagai string → Number(),
+      // bukan new Date() (bigint ms tidak diparse jadi tanggal valid).
+      date: Number(row.date),
       note: row.note,
       payee: row.payee || undefined,
       isVoided: row.is_voided,
@@ -300,11 +305,11 @@ export class McpDataService {
     }
     if (options.startDate) {
       conditions.push(`t.date >= $${paramIdx++}`);
-      params.push(new Date(options.startDate));
+      params.push(options.startDate);
     }
     if (options.endDate) {
       conditions.push(`t.date <= $${paramIdx++}`);
-      params.push(new Date(options.endDate));
+      params.push(options.endDate);
     }
 
     const query = `

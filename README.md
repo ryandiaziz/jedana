@@ -110,6 +110,7 @@ This command will start:
 - **Offline-First**: All transactions and wallet data are saved locally in the browser first via **IndexedDB** (Dexie.js).
 - **Data Synchronization**: Upon user login, local data is synced to the backend (**NestJS** & **PostgreSQL**).
 - **Privacy & Security (Physical Wipe on Logout)**: Upon logging out, local IndexedDB data is physically purged from the device to protect user privacy.
+- **MCP Server (AI Agent Integration)**: Supports remote AI agents (Claude Desktop, Cursor, etc.) to automate financial tracking via the Model Context Protocol. See [MCP Documentation](docs/MCP.md) for full integration details.
 
 ---
 

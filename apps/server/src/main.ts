@@ -3,9 +3,24 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule, mcpStrategy } from './app.module';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import type { Express } from 'express';
+import { ApiKeyService } from './auth/api-key.service';
+import { createMcpAuthMiddleware } from './mcp/mcp-auth';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // ── MCP Auth (level Express) ────────────────────────────────────────────
+  // Transport MCP dari @rekog/mcp-nest melakukan self-mount route `/mcp`
+  // langsung ke instance Express saat `startAllMicroservices()` di bawah —
+  // request MCP TIDAK melewati pipeline middleware NestJS, jadi middleware
+  // Nest (consumer.apply(...).forRoutes('mcp')) tidak akan pernah jalan.
+  // Auth API key dipasang sebagai middleware Express di sini. Wajib didaftarkan
+  // SEBELUM `startAllMicroservices()` agar posisinya di depan handler MCP
+  // di stack Express.
+  const apiKeyService = app.get(ApiKeyService);
+  const expressApp = app.getHttpAdapter().getInstance() as Express;
+  expressApp.use('/mcp', createMcpAuthMiddleware(apiKeyService));
 
   app.setGlobalPrefix('api');
 
