@@ -179,7 +179,7 @@ export class McpDataService {
       note: row.note,
       payee: row.payee || undefined,
       isVoided: row.is_voided,
-      createdAt: new Date(row.created_at).getTime(),
+      createdAt: new Date(row.created_at as string | number | Date).getTime(),
     }));
   }
 
@@ -222,7 +222,7 @@ export class McpDataService {
       id: row.id,
       name: row.name,
       balance: Number(row.balance),
-      createdAt: new Date(row.created_at).getTime(),
+      createdAt: new Date(row.created_at as string | number | Date).getTime(),
     }));
   }
 

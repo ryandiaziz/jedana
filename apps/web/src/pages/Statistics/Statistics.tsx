@@ -28,10 +28,11 @@ export default function Statistics() {
     return { startDate: start, endDate: end };
   }, [period, currentDate]);
 
-  const rawTransactions = TransactionService.useRecentTransactions(startDate, endDate) || [];
+  const rawTransactions = TransactionService.useRecentTransactions(startDate, endDate);
   
   // Apply JS filtering for type and wallet
   const validTransactions = useMemo(() => {
+    if (!rawTransactions) return [];
     return rawTransactions.filter(tx => {
       if (tx.isVoided) return false;
       if (typeFilter !== 'ALL' && tx.type !== typeFilter) return false;
@@ -79,8 +80,8 @@ export default function Statistics() {
 
     validTransactions.forEach(tx => {
       const d = new Date(tx.date);
-      let key = '';
-      let label = '';
+      let key: string;
+      let label: string;
       
       if (period === 'MONTH') {
         // Group by day
@@ -209,7 +210,7 @@ export default function Statistics() {
             <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Transaction Type</label>
             <select 
               value={typeFilter} 
-              onChange={e => setTypeFilter(e.target.value as any)}
+              onChange={e => setTypeFilter(e.target.value as 'ALL' | 'INCOME' | 'EXPENSE')}
               className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-[38px]"
             >
               <option value="ALL">All Types</option>
@@ -265,7 +266,7 @@ export default function Statistics() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: any) => formatCurrency(Number(value) || 0)}
+                    formatter={(value: unknown) => formatCurrency(Number(value) || 0)}
                     contentStyle={{ borderRadius: '8px', border: '1px solid #27272a', backgroundColor: '#09090b', color: '#ffffff' }}
                     itemStyle={{ color: '#ffffff' }}
                   />
@@ -300,7 +301,7 @@ export default function Statistics() {
                     width={80}
                   />
                   <Tooltip 
-                    formatter={(value: any, name: any) => [formatCurrency(Number(value) || 0), name === 'income' ? 'Income' : 'Expense']}
+                    formatter={(value: unknown, name: unknown) => [formatCurrency(Number(value) || 0), name === 'income' ? 'Income' : 'Expense']}
                     cursor={{ fill: '#27272a' }}
                     contentStyle={{ borderRadius: '8px', border: '1px solid #27272a', backgroundColor: '#09090b', color: '#ffffff' }}
                     itemStyle={{ color: '#ffffff' }}

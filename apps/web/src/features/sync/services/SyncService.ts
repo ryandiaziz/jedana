@@ -3,7 +3,7 @@ import { db } from '../../../db/db';
 class SyncEngine {
   async pushLocalChanges() {
     // 1. Gather all local data
-    const payload: Record<string, any[]> = {};
+    const payload: Record<string, unknown[]> = {};
     let hasData = false;
 
     for (const table of db.tables) {

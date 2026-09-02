@@ -89,7 +89,12 @@ export class SyncService {
       await client.query('BEGIN');
 
       // Process in dependency order: wallets -> tags -> transactions -> transaction_tags
-      const tableOrder = ['wallets', 'tags', 'transactions', 'transaction_tags'];
+      const tableOrder = [
+        'wallets',
+        'tags',
+        'transactions',
+        'transaction_tags',
+      ];
       const sortedKeys = Object.keys(data).sort((a, b) => {
         const idxA = tableOrder.indexOf(a);
         const idxB = tableOrder.indexOf(b);
@@ -108,8 +113,10 @@ export class SyncService {
           for (const record of records) {
             // ── Wallet Deduplication (Tombstone Pattern) ──
             if (key === 'wallets') {
-              const isDel = record.isDeleted === true || record.is_deleted === true;
-              const walletName = typeof record.name === 'string' ? record.name.trim() : '';
+              const isDel =
+                record.isDeleted === true || record.is_deleted === true;
+              const walletName =
+                typeof record.name === 'string' ? record.name.trim() : '';
               const walletId = String(record.id);
 
               if (!isDel && walletName) {
@@ -123,8 +130,12 @@ export class SyncService {
                 if (existing?.rows && existing.rows.length > 0) {
                   // Duplicate active wallet detected: persist client's ID as a tombstone
                   // so FK constraints hold and client receives isDeleted: true on next pull.
-                  const now = this.toDate(record.updatedAt as number | undefined);
-                  const createdAt = this.toDate(record.createdAt as number | undefined);
+                  const now = this.toDate(
+                    record.updatedAt as number | undefined,
+                  );
+                  const createdAt = this.toDate(
+                    record.createdAt as number | undefined,
+                  );
                   await client.query(
                     `INSERT INTO wallets (id, user_id, name, is_deleted, created_at, updated_at)
                      VALUES ($1, $2, $3, TRUE, $4, $5)
@@ -138,12 +149,20 @@ export class SyncService {
 
             // ── Stateless Transaction Validation & Remapping ──
             if (key === 'transactions') {
-              const currentWalletId = String(record.walletId || record.wallet_id || '');
+              const rawWalletId = record.walletId ?? record.wallet_id;
+              const currentWalletId =
+                typeof rawWalletId === 'string' ? rawWalletId : '';
               if (!currentWalletId) {
-                throw new Error('Transaction validation error: walletId is required.');
+                throw new Error(
+                  'Transaction validation error: walletId is required.',
+                );
               }
 
-              const targetWallet = await client.query(
+              const targetWallet = await client.query<{
+                id: string;
+                name: string;
+                is_deleted: boolean;
+              }>(
                 `SELECT id, name, is_deleted FROM wallets WHERE id = $1 AND user_id = $2 LIMIT 1`,
                 [currentWalletId, userId],
               );
@@ -158,7 +177,7 @@ export class SyncService {
               if (walletRow.is_deleted) {
                 // Target wallet is inactive (e.g. a tombstone from duplicate client wallet)
                 // Statelessly search for the active canonical wallet with the same name.
-                const activeWallet = await client.query(
+                const activeWallet = await client.query<{ id: string }>(
                   `SELECT id FROM wallets
                    WHERE user_id = $1 AND LOWER(name) = LOWER($2) AND is_deleted = FALSE
                    LIMIT 1`,
@@ -167,8 +186,10 @@ export class SyncService {
 
                 if (activeWallet?.rows && activeWallet.rows.length > 0) {
                   const canonicalId = activeWallet.rows[0].id;
-                  if (record.walletId !== undefined) record.walletId = canonicalId;
-                  if (record.wallet_id !== undefined) record.wallet_id = canonicalId;
+                  if (record.walletId !== undefined)
+                    record.walletId = canonicalId;
+                  if (record.wallet_id !== undefined)
+                    record.wallet_id = canonicalId;
                 } else {
                   throw new Error(
                     `Transaction validation error: Target wallet "${walletRow.name}" (${currentWalletId}) is inactive and has no active canonical counterpart.`,
@@ -227,9 +248,12 @@ export class SyncService {
               // Catch race-condition 23505 on wallets partial unique index
               if (key === 'wallets' && pgErr?.code === '23505') {
                 const walletId = String(record.id);
-                const walletName = typeof record.name === 'string' ? record.name.trim() : '';
+                const walletName =
+                  typeof record.name === 'string' ? record.name.trim() : '';
                 const now = this.toDate(record.updatedAt as number | undefined);
-                const createdAt = this.toDate(record.createdAt as number | undefined);
+                const createdAt = this.toDate(
+                  record.createdAt as number | undefined,
+                );
                 await client.query(
                   `INSERT INTO wallets (id, user_id, name, is_deleted, created_at, updated_at)
                    VALUES ($1, $2, $3, TRUE, $4, $5)

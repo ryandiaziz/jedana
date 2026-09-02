@@ -73,7 +73,9 @@ describe('McpDataService', () => {
       mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // initial check
         .mockRejectedValueOnce(err23505) // insert collision
-        .mockResolvedValueOnce({ rows: [{ id: 'w-winner-id', name: 'Dana Liburan' }] }); // re-select
+        .mockResolvedValueOnce({
+          rows: [{ id: 'w-winner-id', name: 'Dana Liburan' }],
+        }); // re-select
 
       const result = await service.createWallet('user-1', 'Dana Liburan');
 
@@ -121,7 +123,9 @@ describe('McpDataService', () => {
       mockPool.query
         .mockResolvedValueOnce({ rows: [] })
         .mockRejectedValueOnce(err23505)
-        .mockResolvedValueOnce({ rows: [{ id: 't-winner-id', name: 'Transport' }] });
+        .mockResolvedValueOnce({
+          rows: [{ id: 't-winner-id', name: 'Transport' }],
+        });
 
       const result = await service.createTag('user-1', 'Transport');
 

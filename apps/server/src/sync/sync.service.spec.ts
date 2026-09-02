@@ -100,15 +100,24 @@ describe('SyncService', () => {
     });
 
     it('should upsert tombstone when duplicate wallet is pushed in Batch 1 and remap transaction in same batch', async () => {
-      mockClient.query.mockImplementation((sql: string, params?: unknown[]) => {
+      mockClient.query.mockImplementation((sql: string) => {
         if (sql === 'BEGIN' || sql === 'COMMIT') return Promise.resolve();
         // SELECT to check duplicate active wallet
-        if (sql.includes('SELECT id FROM wallets') && sql.includes('is_deleted = FALSE')) {
+        if (
+          sql.includes('SELECT id FROM wallets') &&
+          sql.includes('is_deleted = FALSE')
+        ) {
           return Promise.resolve({ rows: [{ id: 'w-canonical' }] });
         }
         // Target wallet check for transaction
-        if (sql.includes('SELECT id, name, is_deleted FROM wallets WHERE id = $1')) {
-          return Promise.resolve({ rows: [{ id: 'w-duplicate', name: 'Dana Harian', is_deleted: true }] });
+        if (
+          sql.includes('SELECT id, name, is_deleted FROM wallets WHERE id = $1')
+        ) {
+          return Promise.resolve({
+            rows: [
+              { id: 'w-duplicate', name: 'Dana Harian', is_deleted: true },
+            ],
+          });
         }
         return Promise.resolve({ rows: [] });
       });
@@ -140,7 +149,10 @@ describe('SyncService', () => {
 
       // Verify that w-duplicate was saved as tombstone (is_deleted = TRUE)
       const tombstoneCall = mockClient.query.mock.calls.find(
-        (call) => call[0].includes('INSERT INTO wallets') && call[1] && call[1].includes('w-duplicate'),
+        (call) =>
+          call[0].includes('INSERT INTO wallets') &&
+          call[1] &&
+          call[1].includes('w-duplicate'),
       );
       expect(tombstoneCall).toBeDefined();
       expect(tombstoneCall[0]).toContain('TRUE');
@@ -154,14 +166,23 @@ describe('SyncService', () => {
     });
 
     it('should statelessly remap transaction in Batch 2 when only transaction is sent with tombstone wallet ID', async () => {
-      mockClient.query.mockImplementation((sql: string, params?: unknown[]) => {
+      mockClient.query.mockImplementation((sql: string) => {
         if (sql === 'BEGIN' || sql === 'COMMIT') return Promise.resolve();
         // Target wallet check for transaction finds tombstone record
-        if (sql.includes('SELECT id, name, is_deleted FROM wallets WHERE id = $1')) {
-          return Promise.resolve({ rows: [{ id: 'w-tombstone-1', name: 'Dana Harian', is_deleted: true }] });
+        if (
+          sql.includes('SELECT id, name, is_deleted FROM wallets WHERE id = $1')
+        ) {
+          return Promise.resolve({
+            rows: [
+              { id: 'w-tombstone-1', name: 'Dana Harian', is_deleted: true },
+            ],
+          });
         }
         // Active canonical search for same name
-        if (sql.includes('SELECT id FROM wallets') && sql.includes('LOWER(name) = LOWER($2) AND is_deleted = FALSE')) {
+        if (
+          sql.includes('SELECT id FROM wallets') &&
+          sql.includes('LOWER(name) = LOWER($2) AND is_deleted = FALSE')
+        ) {
           return Promise.resolve({ rows: [{ id: 'w-canonical-1' }] });
         }
         return Promise.resolve({ rows: [] });
@@ -196,10 +217,17 @@ describe('SyncService', () => {
     it('should throw explicit error when transaction targets deleted wallet with NO active counterpart', async () => {
       mockClient.query.mockImplementation((sql: string) => {
         if (sql === 'BEGIN' || sql === 'COMMIT') return Promise.resolve();
-        if (sql.includes('SELECT id, name, is_deleted FROM wallets WHERE id = $1')) {
-          return Promise.resolve({ rows: [{ id: 'w-deleted', name: 'Old Wallet', is_deleted: true }] });
+        if (
+          sql.includes('SELECT id, name, is_deleted FROM wallets WHERE id = $1')
+        ) {
+          return Promise.resolve({
+            rows: [{ id: 'w-deleted', name: 'Old Wallet', is_deleted: true }],
+          });
         }
-        if (sql.includes('SELECT id FROM wallets') && sql.includes('is_deleted = FALSE')) {
+        if (
+          sql.includes('SELECT id FROM wallets') &&
+          sql.includes('is_deleted = FALSE')
+        ) {
           return Promise.resolve({ rows: [] }); // No active counterpart found
         }
         return Promise.resolve({ rows: [] });
@@ -228,7 +256,9 @@ describe('SyncService', () => {
     it('should throw explicit error when transaction targets non-existent wallet ID', async () => {
       mockClient.query.mockImplementation((sql: string) => {
         if (sql === 'BEGIN' || sql === 'COMMIT') return Promise.resolve();
-        if (sql.includes('SELECT id, name, is_deleted FROM wallets WHERE id = $1')) {
+        if (
+          sql.includes('SELECT id, name, is_deleted FROM wallets WHERE id = $1')
+        ) {
           return Promise.resolve({ rows: [] }); // Not found in DB
         }
         return Promise.resolve({ rows: [] });
@@ -284,7 +314,10 @@ describe('SyncService', () => {
 
       // Verify that tombstone insert was called upon catching 23505
       const tombstoneCalls = mockClient.query.mock.calls.filter(
-        (call) => call[0].includes('INSERT INTO wallets') && call[1] && call[1].includes('w-race'),
+        (call) =>
+          call[0].includes('INSERT INTO wallets') &&
+          call[1] &&
+          call[1].includes('w-race'),
       );
       expect(tombstoneCalls).toHaveLength(2);
       expect(tombstoneCalls[1][0]).toContain('TRUE');
