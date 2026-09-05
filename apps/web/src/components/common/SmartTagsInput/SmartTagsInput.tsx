@@ -64,7 +64,7 @@ export function SmartTagsInput({
               <button 
                 type="button" 
                 onClick={() => onChange(selectedTags.filter(t => t !== tag))} 
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <X size={12} />
               </button>
@@ -99,7 +99,7 @@ export function SmartTagsInput({
               onChange([]);
               setTagSearch('');
             }} 
-            className="text-muted-foreground hover:text-foreground ml-auto"
+            className="text-muted-foreground hover:text-foreground ml-auto cursor-pointer p-0.5 rounded hover:bg-muted"
             title="Clear all"
           >
             <X size={16} />
@@ -120,7 +120,7 @@ export function SmartTagsInput({
                 setTagSearch('');
                 setIsOpen(false);
               }}
-              className="bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary px-2 py-1 rounded-md text-xs transition-colors"
+              className="bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary px-2 py-1 rounded-md text-xs transition-colors cursor-pointer"
             >
               +{tag.name}
             </button>

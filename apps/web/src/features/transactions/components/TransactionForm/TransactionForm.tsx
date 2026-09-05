@@ -81,6 +81,18 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
     }
   };
 
+  const formatAmountDisplay = (val: string) => {
+    if (!val) return '';
+    const clean = val.replace(/\D/g, '');
+    if (!clean) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(clean));
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawDigits = e.target.value.replace(/\D/g, '');
+    setAmount(rawDigits);
+  };
+
   return (
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
@@ -94,7 +106,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           <button 
             type="button"
             onClick={onClose} 
-            className="p-1.5 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+            className="p-1.5 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <X size={20} />
           </button>
@@ -107,7 +119,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
               type="button"
               onClick={() => setType('EXPENSE')}
               className={cn(
-                "flex-1 py-2.5 text-sm font-medium rounded-md transition-all",
+                "flex-1 py-2.5 text-sm font-medium rounded-md transition-all cursor-pointer",
                 type === 'EXPENSE' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -117,7 +129,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
               type="button"
               onClick={() => setType('INCOME')}
               className={cn(
-                "flex-1 py-2.5 text-sm font-medium rounded-md transition-all",
+                "flex-1 py-2.5 text-sm font-medium rounded-md transition-all cursor-pointer",
                 type === 'INCOME' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -131,7 +143,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
               <select 
                 value={effectiveWalletId} 
                 onChange={e => setWalletId(e.target.value)}
-                className="w-full bg-background border border-border rounded-md px-3 py-2.5 focus:outline-none focus:border-primary transition-colors"
+                className="w-full bg-background border border-border rounded-md px-3 py-2.5 focus:outline-none focus:border-primary transition-colors cursor-pointer"
                 required
               >
                 {wallets.map(w => (
@@ -143,25 +155,40 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Amount</label>
-            <input
-              type="number"
-              required
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className="w-full bg-background border border-border rounded-md px-3 py-2.5 text-xl md:text-lg focus:outline-none focus:border-primary transition-colors"
-              placeholder="0"
-            />
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-muted-foreground font-semibold text-base select-none pointer-events-none">
+                Rp
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                required
+                value={formatAmountDisplay(amount)}
+                onChange={handleAmountChange}
+                className="w-full bg-background border border-border rounded-md pl-11 pr-3 py-2.5 text-xl md:text-lg font-semibold focus:outline-none focus:border-primary transition-colors"
+                placeholder="0"
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Date & Time</label>
-            <input
-              type="datetime-local"
-              required
-              value={dateStr}
-              onChange={e => setDateStr(e.target.value)}
-              className="w-full bg-background border border-border rounded-md px-3 py-2.5 focus:outline-none focus:border-primary transition-colors"
-            />
+            <div className="relative">
+              <input
+                type="datetime-local"
+                required
+                value={dateStr}
+                onChange={e => setDateStr(e.target.value)}
+                onClick={(e) => {
+                  try {
+                    e.currentTarget.showPicker();
+                  } catch {
+                    /* fallback for unsupported browsers */
+                  }
+                }}
+                className="w-full bg-background border border-border rounded-md px-3 py-2.5 focus:outline-none focus:border-primary transition-colors cursor-pointer"
+              />
+            </div>
           </div>
 
           <SmartInput

@@ -55,7 +55,7 @@ export function SmartInput({
               onChange('');
               setIsOpen(true);
             }} 
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5 rounded hover:bg-muted"
             title="Clear"
           >
             <X size={16} />
@@ -74,8 +74,8 @@ export function SmartInput({
               }}
               className={
                 suggestionVariant === 'highlight' 
-                ? "bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded-md text-xs transition-colors border border-primary/20"
-                : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary px-2 py-1 rounded-md text-xs transition-colors"
+                ? "bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded-md text-xs transition-colors border border-primary/20 cursor-pointer"
+                : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary px-2 py-1 rounded-md text-xs transition-colors cursor-pointer"
               }
             >
               {opt}
