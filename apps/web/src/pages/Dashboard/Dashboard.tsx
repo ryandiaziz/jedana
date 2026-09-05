@@ -249,7 +249,7 @@ export default function Dashboard() {
                                 <span className="text-muted-foreground/30 text-[10px]">•</span>
                                 <div className="flex gap-1 flex-wrap">
                                   {tx.tags.map(t => (
-                                    <span key={t?.id} className="text-[9px] md:text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.25 rounded-sm bg-muted text-foreground">
+                                    <span key={t?.id} className="text-[9px] md:text-[10px] uppercase tracking-wider font-bold px-1.5 py-px rounded-sm bg-muted text-foreground">
                                       {t?.name}
                                     </span>
                                   ))}
