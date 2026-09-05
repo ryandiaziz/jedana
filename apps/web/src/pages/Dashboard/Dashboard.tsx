@@ -110,7 +110,7 @@ export default function Dashboard() {
                 onClick={() => {
                   try { monthInputRef.current?.showPicker(); } catch { /* fallback for unsupported browsers */ }
                 }}
-                className="text-2xl md:text-3xl font-bold tracking-tight cursor-pointer group-hover:text-primary transition-colors"
+                className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight cursor-pointer group-hover:text-primary transition-colors"
               >
                 {monthName}
               </h2>
@@ -140,37 +140,37 @@ export default function Dashboard() {
       </header>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group hover:border-muted-foreground/30 transition-colors">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 relative overflow-hidden group hover:border-muted-foreground/30 transition-colors">
           <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
             <WalletIcon size={80} />
           </div>
           <span className="text-sm font-medium text-muted-foreground">Net Balance</span>
-          <span className={cn("text-4xl font-bold tracking-tight", net >= 0 ? "text-foreground" : "text-destructive")}>
+          <span className={cn("text-2xl md:text-4xl font-bold tracking-tight", net >= 0 ? "text-foreground" : "text-destructive")}>
             {formatCurrency(net)}
           </span>
         </div>
         
-        <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-2 hover:border-muted-foreground/30 transition-colors">
+        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 hover:border-muted-foreground/30 transition-colors">
           <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
             <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center">
               <ArrowDown size={12} className="text-success" />
             </div>
             Total Income
           </span>
-          <span className="text-2xl font-bold tracking-tight">
+          <span className="text-xl md:text-2xl font-bold tracking-tight">
             {formatCurrency(income)}
           </span>
         </div>
 
-        <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-2 hover:border-muted-foreground/30 transition-colors">
+        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 hover:border-muted-foreground/30 transition-colors">
           <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
             <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center">
               <ArrowUp size={12} className="text-destructive" />
             </div>
             Total Expense
           </span>
-          <span className="text-2xl font-bold tracking-tight">
+          <span className="text-xl md:text-2xl font-bold tracking-tight">
             {formatCurrency(expense)}
           </span>
         </div>
@@ -217,27 +217,27 @@ export default function Dashboard() {
                     <div 
                       key={tx.id} 
                       onClick={() => { setSelectedTx(tx); setShowForm(true); }}
-                      className="bg-card border border-border p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors group cursor-pointer"
+                      className="bg-card border border-border p-3 md:p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors group cursor-pointer"
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 md:gap-4 min-w-0">
                         <div className={cn(
-                          "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
+                          "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0",
                           tx.type === 'INCOME' ? "bg-success/10 text-success" : "bg-foreground text-background"
                         )}>
-                          {tx.type === 'INCOME' ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
+                          {tx.type === 'INCOME' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-base">{tx.note || (tx.type === 'INCOME' ? 'Income' : 'Expense')}</span>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-medium text-sm md:text-base truncate">{tx.note || (tx.type === 'INCOME' ? 'Income' : 'Expense')}</span>
+                          <div className="flex items-center gap-2 mt-0.5 md:mt-1 flex-wrap">
                             <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
                               {new Date(tx.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                             {tx.tags && tx.tags.length > 0 && (
                               <>
                                 <span className="text-muted-foreground/30 text-xs">•</span>
-                                <div className="flex gap-1.5 flex-wrap">
+                                <div className="flex gap-1 md:gap-1.5 flex-wrap">
                                   {tx.tags.map(t => (
-                                    <span key={t?.id} className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm bg-muted text-foreground">
+                                    <span key={t?.id} className="text-[10px] uppercase tracking-wider font-bold px-1.5 md:px-2 py-0.5 rounded-sm bg-muted text-foreground">
                                       {t?.name}
                                     </span>
                                   ))}
@@ -248,7 +248,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className={cn(
-                        "font-bold text-lg whitespace-nowrap ml-4",
+                        "font-bold text-base md:text-lg whitespace-nowrap ml-3 md:ml-4",
                         tx.type === 'INCOME' ? "text-success" : "text-foreground"
                       )}>
                         {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
@@ -271,22 +271,22 @@ export default function Dashboard() {
               <div 
                 key={tx.id} 
                 onClick={() => { setSelectedTx(tx); setShowForm(true); }}
-                className="bg-card border border-border p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer"
+                className="bg-card border border-border p-3 md:p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-muted text-muted-foreground shrink-0">
-                    {tx.type === 'INCOME' ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
+                <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-muted text-muted-foreground shrink-0">
+                    {tx.type === 'INCOME' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-base line-through">{tx.note || (tx.type === 'INCOME' ? 'Income' : 'Expense')}</span>
-                    <div className="flex items-center gap-2 mt-1">
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-medium text-sm md:text-base line-through truncate">{tx.note || (tx.type === 'INCOME' ? 'Income' : 'Expense')}</span>
+                    <div className="flex items-center gap-2 mt-0.5 md:mt-1">
                       <span className="text-xs font-medium text-muted-foreground">
                         {new Date(tx.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="font-bold text-lg line-through text-muted-foreground ml-4">
+                <div className="font-bold text-base md:text-lg line-through text-muted-foreground ml-3 md:ml-4">
                   {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
                 </div>
               </div>
@@ -294,6 +294,16 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <button
+        onClick={() => { setSelectedTx(undefined); setFormType('EXPENSE'); setShowForm(true); }}
+        className="md:hidden fixed right-5 bottom-20 z-30 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        title="New Transaction"
+        aria-label="New Transaction"
+      >
+        <Plus size={26} />
+      </button>
 
       {showForm && (
         <TransactionForm 

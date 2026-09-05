@@ -18,8 +18,8 @@ function App() {
             <Sidebar />
             
             {/* Main Content */}
-            <main className="flex-1 p-6 lg:p-8 overflow-x-hidden">
-              <div className="max-w-4xl mx-auto">
+            <main className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6 lg:pb-8 overflow-x-hidden">
+              <div className="md:max-w-4xl md:mx-auto">
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/wallets" element={<Wallets />} />

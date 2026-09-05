@@ -150,9 +150,9 @@ export default function Statistics() {
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
-      <header className="flex flex-row justify-between items-start">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-3xl font-bold tracking-tight">Statistics</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Statistics</h2>
           <p className="text-muted-foreground text-sm font-medium">Visual analysis of your cash flow</p>
         </div>
         <button onClick={seedDummyData} className="flex items-center gap-2 px-3 py-1.5 bg-muted hover:bg-muted/80 text-xs font-semibold rounded-md text-muted-foreground transition-colors">
@@ -162,7 +162,7 @@ export default function Statistics() {
       </header>
 
       {/* Filter Section */}
-      <div className="bg-card border border-border p-5 rounded-xl flex flex-col gap-4">
+      <div className="bg-card border border-border p-4 md:p-5 rounded-xl flex flex-col gap-4">
         <div className="flex items-center gap-2 text-sm font-bold tracking-tight">
           <Filter size={16} />
           Filter Data
@@ -243,20 +243,20 @@ export default function Statistics() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Pie Chart */}
-          <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-6 hover:border-muted-foreground/30 transition-colors">
+          <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-4 md:gap-6 hover:border-muted-foreground/30 transition-colors">
             <div className="flex items-center gap-2 font-semibold">
               <PieIcon size={18} />
               Composition by Tag
             </div>
-            <div className="h-[300px] w-full">
+            <div className="h-[250px] md:h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
+                    innerRadius={50}
+                    outerRadius={85}
                     paddingAngle={2}
                     dataKey="value"
                     stroke="none"
@@ -277,12 +277,12 @@ export default function Statistics() {
           </div>
 
           {/* Bar Chart */}
-          <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-6 hover:border-muted-foreground/30 transition-colors">
+          <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-4 md:gap-6 hover:border-muted-foreground/30 transition-colors">
             <div className="flex items-center gap-2 font-semibold">
               <BarChart3 size={18} />
               Trend - {typeFilter === 'INCOME' ? 'Income' : typeFilter === 'EXPENSE' ? 'Expense' : 'Activity'}
             </div>
-            <div className="h-[300px] w-full">
+            <div className="h-[250px] md:h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.5} />

@@ -21,13 +21,13 @@ export default function Wallets() {
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500">
       <header className="flex flex-col gap-1">
-        <h2 className="text-3xl font-bold tracking-tight">Wallet Management</h2>
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Wallet Management</h2>
         <p className="text-muted-foreground text-sm font-medium">Manage your Envelopes</p>
       </header>
 
       <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-4">
         <h3 className="font-semibold text-lg tracking-tight">Add New Wallet</h3>
-        <form onSubmit={handleAddWallet} className="flex gap-3">
+        <form onSubmit={handleAddWallet} className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
             value={newWalletName}
@@ -38,7 +38,7 @@ export default function Wallets() {
           />
           <button 
             type="submit"
-            className="bg-foreground text-background flex items-center justify-center px-6 py-2 rounded-md font-semibold hover:opacity-90 transition-opacity whitespace-nowrap gap-2"
+            className="bg-foreground text-background flex items-center justify-center px-6 py-2.5 rounded-md font-semibold hover:opacity-90 transition-opacity whitespace-nowrap gap-2"
           >
             <Plus size={18} />
             Add
