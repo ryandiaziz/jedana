@@ -88,7 +88,7 @@ export function SmartTagsInput({
             }
             setTimeout(() => setIsOpen(false), 200);
           }}
-          className="flex-1 bg-transparent border-none outline-none text-sm min-w-[60px]"
+          className="flex-1 bg-transparent border-none outline-none text-sm min-w-15"
           placeholder={selectedTags.length === 0 && !disabled ? "Type and press enter" : ""}
           disabled={disabled}
         />

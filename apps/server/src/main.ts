@@ -3,12 +3,18 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule, mcpStrategy } from './app.module';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import type { Express } from 'express';
+import { json, urlencoded, type Express } from 'express';
 import { ApiKeyService } from './auth/api-key.service';
 import { createMcpAuthMiddleware } from './mcp/mcp-auth';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false,
+  });
+
+  // Body parser with 50mb limit to handle large sync batch payloads
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   // ── MCP Auth (level Express) ────────────────────────────────────────────
   // Transport MCP dari @rekog/mcp-nest melakukan self-mount route `/mcp`

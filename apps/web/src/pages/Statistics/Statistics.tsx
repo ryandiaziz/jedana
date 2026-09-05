@@ -211,7 +211,7 @@ export default function Statistics() {
             <select 
               value={typeFilter} 
               onChange={e => setTypeFilter(e.target.value as 'ALL' | 'INCOME' | 'EXPENSE')}
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-[38px]"
+              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-9.5"
             >
               <option value="ALL">All Types</option>
               <option value="EXPENSE">Expense Only</option>
@@ -224,7 +224,7 @@ export default function Statistics() {
             <select 
               value={walletFilter} 
               onChange={e => setWalletFilter(e.target.value)}
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-[38px]"
+              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-9.5"
             >
               <option value="ALL">All Wallets</option>
               {wallets.map(w => (
@@ -248,7 +248,7 @@ export default function Statistics() {
               <PieIcon size={18} />
               Composition by Tag
             </div>
-            <div className="h-[250px] md:h-[300px] w-full">
+            <div className="h-62.5 md:h-75 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -282,7 +282,7 @@ export default function Statistics() {
               <BarChart3 size={18} />
               Trend - {typeFilter === 'INCOME' ? 'Income' : typeFilter === 'EXPENSE' ? 'Expense' : 'Activity'}
             </div>
-            <div className="h-[250px] md:h-[300px] w-full">
+            <div className="h-62.5 md:h-75 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.5} />
