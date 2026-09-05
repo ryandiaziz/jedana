@@ -103,7 +103,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
   return (
     <div 
       className={cn(
-        "fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4",
+        "fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4",
         isClosing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"
       )}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
@@ -114,28 +114,28 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           isClosing ? "animate-modal-card-out" : "animate-modal-card"
         )}
       >
-        <div className="flex justify-between items-center px-5 py-4 border-b border-border">
-          <h2 className="font-semibold text-base md:text-lg">
+        <div className="flex justify-between items-center px-4 py-3 sm:px-5 sm:py-3.5 border-b border-border">
+          <h2 className="font-semibold text-base sm:text-lg">
             {initialData ? (initialData.isVoided ? 'Transaction Details (Voided)' : 'Edit Transaction') : 'New Transaction'}
           </h2>
           <button 
             type="button"
             onClick={handleClose} 
-            className="p-1.5 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground cursor-pointer active:scale-95"
+            className="p-1 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground cursor-pointer active:scale-95"
           >
-            <X size={20} />
+            <X size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto flex-1">
-          <fieldset disabled={initialData?.isVoided} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="p-3.5 sm:p-5 flex flex-col gap-3 sm:gap-4 overflow-y-auto flex-1">
+          <fieldset disabled={initialData?.isVoided} className="flex flex-col gap-3 sm:gap-4">
           <div className="flex bg-muted rounded-lg p-1">
             <button
               type="button"
               onClick={() => setType('EXPENSE')}
               className={cn(
-                "flex-1 py-2.5 text-sm font-medium rounded-md transition-all cursor-pointer",
-                type === 'EXPENSE' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                "flex-1 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all cursor-pointer",
+                type === 'EXPENSE' ? "bg-card text-foreground shadow-sm font-semibold" : "text-muted-foreground hover:text-foreground"
               )}
             >
               Expense
@@ -144,8 +144,8 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
               type="button"
               onClick={() => setType('INCOME')}
               className={cn(
-                "flex-1 py-2.5 text-sm font-medium rounded-md transition-all cursor-pointer",
-                type === 'INCOME' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                "flex-1 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all cursor-pointer",
+                type === 'INCOME' ? "bg-card text-foreground shadow-sm font-semibold" : "text-muted-foreground hover:text-foreground"
               )}
             >
               Income
@@ -153,12 +153,12 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           </div>
 
           {wallets && wallets.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Select Wallet</label>
+            <div className="flex flex-col gap-1 sm:gap-1.5">
+              <label className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Select Wallet</label>
               <select 
                 value={effectiveWalletId} 
                 onChange={e => setWalletId(e.target.value)}
-                className="w-full bg-background border border-border rounded-md px-3 py-2.5 focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                className="w-full bg-background border border-border rounded-md px-3 py-2 sm:py-2.5 text-sm focus:outline-none focus:border-primary transition-colors cursor-pointer"
                 required
               >
                 {wallets.map(w => (
@@ -168,10 +168,10 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
             </div>
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Amount</label>
+          <div className="flex flex-col gap-1 sm:gap-1.5">
+            <label className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Amount</label>
             <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-muted-foreground font-semibold text-base select-none pointer-events-none">
+              <span className="absolute left-3 text-muted-foreground font-semibold text-sm sm:text-base select-none pointer-events-none">
                 Rp
               </span>
               <input
@@ -180,14 +180,14 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                 required
                 value={formatAmountDisplay(amount)}
                 onChange={handleAmountChange}
-                className="w-full bg-background border border-border rounded-md pl-11 pr-3 py-2.5 text-xl md:text-lg font-semibold focus:outline-none focus:border-primary transition-colors"
+                className="w-full bg-background border border-border rounded-md pl-10 pr-3 py-2 sm:py-2.5 text-lg sm:text-xl font-bold focus:outline-none focus:border-primary transition-colors"
                 placeholder="0"
               />
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Date & Time</label>
+          <div className="flex flex-col gap-1 sm:gap-1.5">
+            <label className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Date & Time</label>
             <div className="relative">
               <input
                 type="datetime-local"
@@ -201,7 +201,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                     /* fallback for unsupported browsers */
                   }
                 }}
-                className="w-full bg-background border border-border rounded-md px-3 py-2.5 focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                className="w-full bg-background border border-border rounded-md px-3 py-2 sm:py-2.5 text-sm focus:outline-none focus:border-primary transition-colors cursor-pointer"
               />
             </div>
           </div>
@@ -234,7 +234,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           />
           </fieldset>
 
-          <div className="flex gap-2.5 mt-2 pt-1 pb-1">
+          <div className="flex gap-2 sm:gap-2.5 mt-1 sm:mt-2 pt-1 pb-1">
             {initialData && !initialData.isVoided && (
               <button 
                 type="button" 
@@ -244,7 +244,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                     handleClose();
                   }
                 }}
-                className="w-1/3 bg-destructive/10 text-destructive font-medium py-3 rounded-xl hover:bg-destructive/20 active:bg-destructive/30 transition-colors cursor-pointer"
+                className="w-1/3 bg-destructive/10 text-destructive font-medium py-2.5 sm:py-3 text-sm rounded-xl hover:bg-destructive/20 active:bg-destructive/30 transition-colors cursor-pointer"
               >
                 Void
               </button>
@@ -258,13 +258,13 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                     handleClose();
                   }
                 }}
-                className="flex-1 bg-foreground text-background font-medium py-3 rounded-xl hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer shadow-sm"
+                className="flex-1 bg-foreground text-background font-medium py-2.5 sm:py-3 text-sm rounded-xl hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer shadow-sm"
               >
                 Restore Transaction
               </button>
             )}
             {!initialData?.isVoided && (
-              <button type="submit" className="flex-1 bg-primary text-primary-foreground font-medium py-3 rounded-xl hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer shadow-sm">
+              <button type="submit" className="flex-1 bg-primary text-primary-foreground font-semibold py-2.5 sm:py-3 text-sm rounded-xl hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer shadow-sm">
                 Save
               </button>
             )}

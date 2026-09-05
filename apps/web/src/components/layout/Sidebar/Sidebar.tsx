@@ -37,22 +37,32 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* ==================== MOBILE BOTTOM TAB BAR ==================== */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border flex md:hidden items-stretch" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      {/* ==================== MOBILE BOTTOM TAB BAR (ICON-ONLY) ==================== */}
+      <nav 
+        className="fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border flex md:hidden items-center justify-around px-1 h-13" 
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        aria-label="Mobile Navigation"
+      >
         {navItems.map(item => {
           const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
           return (
             <NavLink
               key={item.to}
               to={item.to}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-14 text-[10px] font-medium transition-all active:scale-90 duration-150 cursor-pointer ${
+              title={item.label}
+              aria-label={item.label}
+              className={`relative flex-1 flex flex-col items-center justify-center py-1 h-full transition-all active:scale-90 duration-150 cursor-pointer ${
                 isActive 
-                  ? 'text-primary font-semibold' 
-                  : 'text-muted-foreground active:text-foreground'
+                  ? 'text-primary' 
+                  : 'text-muted-foreground hover:text-foreground active:text-foreground'
               }`}
             >
-              <item.icon size={20} className={`shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
-              <span className="leading-none transition-colors">{item.label}</span>
+              <div className={`p-1.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-primary/10 text-primary' : ''}`}>
+                <item.icon size={22} className={`shrink-0 transition-transform duration-200 ${isActive ? 'scale-105' : ''}`} />
+              </div>
+              {isActive && (
+                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-primary" />
+              )}
             </NavLink>
           );
         })}

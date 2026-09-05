@@ -96,17 +96,17 @@ export default function Dashboard() {
   }, [validTransactions]);
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-5 md:gap-8 animate-in fade-in duration-500 pb-8 md:pb-10">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4">
+        <div className="flex flex-col gap-1 md:gap-2">
           {/* Month Navigation */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <button 
               onClick={handlePrevMonth} 
-              className="p-1.5 hover:bg-muted active:scale-90 rounded-md transition-all text-muted-foreground hover:text-foreground cursor-pointer"
+              className="p-1 md:p-1.5 hover:bg-muted active:scale-90 rounded-md transition-all text-muted-foreground hover:text-foreground cursor-pointer"
               title="Previous Month"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} className="md:w-5 md:h-5" />
             </button>
             
             <div className="relative group">
@@ -115,7 +115,7 @@ export default function Dashboard() {
                 onClick={() => {
                   try { monthInputRef.current?.showPicker(); } catch { /* fallback for unsupported browsers */ }
                 }}
-                className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight cursor-pointer group-hover:text-primary transition-colors animate-month-switch"
+                className="text-lg md:text-2xl lg:text-3xl font-bold tracking-tight cursor-pointer group-hover:text-primary transition-colors animate-month-switch"
               >
                 {monthName}
               </h2>
@@ -131,13 +131,13 @@ export default function Dashboard() {
 
             <button 
               onClick={handleNextMonth} 
-              className="p-1.5 hover:bg-muted active:scale-90 rounded-md transition-all text-muted-foreground hover:text-foreground cursor-pointer"
+              className="p-1 md:p-1.5 hover:bg-muted active:scale-90 rounded-md transition-all text-muted-foreground hover:text-foreground cursor-pointer"
               title="Next Month"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} className="md:w-5 md:h-5" />
             </button>
           </div>
-          <p className="text-muted-foreground text-sm font-medium">Cash flow from all wallets</p>
+          <p className="text-muted-foreground text-xs md:text-sm font-medium">Cash flow from all wallets</p>
         </div>
         <button 
           onClick={() => { setSelectedTx(undefined); setFormType('EXPENSE'); setShowForm(true); }}
@@ -149,104 +149,107 @@ export default function Dashboard() {
       </header>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 relative overflow-hidden group hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out">
-          <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
-            <WalletIcon size={80} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 md:gap-4">
+        {/* Net Balance: full width (col-span-2) on mobile, 1 col on desktop */}
+        <div className="col-span-2 md:col-span-1 bg-card border border-border p-3.5 md:p-6 rounded-xl flex flex-col gap-1 md:gap-2 relative overflow-hidden group hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out">
+          <div className="absolute top-0 right-0 p-3 md:p-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
+            <WalletIcon size={56} className="md:w-20 md:h-20" />
           </div>
-          <span className="text-sm font-medium text-muted-foreground">Net Balance</span>
-          <span className={cn("text-2xl md:text-4xl font-bold tracking-tight transition-colors duration-200", net >= 0 ? "text-foreground" : "text-destructive")}>
+          <span className="text-xs md:text-sm font-medium text-muted-foreground">Net Balance</span>
+          <span className={cn("text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight transition-colors duration-200", net >= 0 ? "text-foreground" : "text-destructive")}>
             {formatCurrency(net)}
           </span>
         </div>
         
-        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out group">
-          <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-              <ArrowDown size={12} className="text-success" />
+        {/* Total Income: 1 col on mobile, 1 col on desktop */}
+        <div className="col-span-1 bg-card border border-border p-3 md:p-6 rounded-xl flex flex-col gap-1 md:gap-2 hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out group">
+          <span className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+            <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-success/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+              <ArrowDown size={10} className="text-success md:w-3 md:h-3" />
             </div>
             Total Income
           </span>
-          <span className="text-xl md:text-2xl font-bold tracking-tight">
+          <span className="text-base md:text-2xl font-bold tracking-tight truncate">
             {formatCurrency(income)}
           </span>
         </div>
 
-        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out group">
-          <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-              <ArrowUp size={12} className="text-destructive" />
+        {/* Total Expense: 1 col on mobile, 1 col on desktop */}
+        <div className="col-span-1 bg-card border border-border p-3 md:p-6 rounded-xl flex flex-col gap-1 md:gap-2 hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out group">
+          <span className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+            <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-destructive/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+              <ArrowUp size={10} className="text-destructive md:w-3 md:h-3" />
             </div>
             Total Expense
           </span>
-          <span className="text-xl md:text-2xl font-bold tracking-tight">
+          <span className="text-base md:text-2xl font-bold tracking-tight truncate">
             {formatCurrency(expense)}
           </span>
         </div>
       </div>
 
       {/* Transaction List */}
-      <div className="flex flex-col gap-4">
-        <h3 className="font-semibold text-lg tracking-tight">Transaction History</h3>
+      <div className="flex flex-col gap-3 md:gap-4">
+        <h3 className="font-semibold text-base md:text-lg tracking-tight">Transaction History</h3>
         
         {!transactions ? (
           <div className="text-muted-foreground text-sm animate-pulse">Loading data...</div>
         ) : validTransactions.length === 0 ? (
-          <div className="bg-card border border-border border-dashed rounded-xl p-10 flex flex-col items-center justify-center text-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
-              <WalletIcon size={28} className="text-muted-foreground" />
+          <div className="bg-card border border-border border-dashed rounded-xl p-8 md:p-10 flex flex-col items-center justify-center text-center gap-3">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-muted flex items-center justify-center">
+              <WalletIcon size={24} className="text-muted-foreground md:w-7 md:h-7" />
             </div>
             <div>
-              <p className="font-medium text-lg">No transactions</p>
-              <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">Start recording your first income or expense to track your cash flow this month.</p>
+              <p className="font-medium text-base md:text-lg">No transactions</p>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-sm mx-auto">Start recording your first income or expense to track your cash flow this month.</p>
             </div>
             <button 
               onClick={() => { setSelectedTx(undefined); setFormType('EXPENSE'); setShowForm(true); }}
-              className="mt-2 text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors"
+              className="mt-1 md:mt-2 text-xs md:text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors cursor-pointer"
             >
               Start tracking
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 md:gap-6">
             {groupedTransactions.map(group => (
-              <div key={group.dateStr} className="flex flex-col gap-3">
+              <div key={group.dateStr} className="flex flex-col gap-2 md:gap-3">
                 {/* Daily Group Header */}
-                <div className="flex items-center justify-between px-1 border-b border-border/50 pb-2">
-                  <h4 className="font-semibold text-sm">{group.label}</h4>
-                  <div className="flex gap-3 text-xs font-medium bg-muted px-2 py-1 rounded-md">
+                <div className="flex items-center justify-between px-1 border-b border-border/50 pb-1.5">
+                  <h4 className="font-semibold text-xs md:text-sm text-muted-foreground tracking-wide">{group.label}</h4>
+                  <div className="flex gap-2 md:gap-3 text-[11px] md:text-xs font-medium bg-muted px-2 py-0.5 md:py-1 rounded-md">
                     {group.income > 0 && <span className="text-success">+{formatCurrency(group.income)}</span>}
                     {group.expense > 0 && <span className="text-foreground">-{formatCurrency(group.expense)}</span>}
                   </div>
                 </div>
                 
                 {/* Daily Transactions */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5 md:gap-2">
                   {group.transactions.map(tx => (
                     <div 
                       key={tx.id} 
                       onClick={() => { setSelectedTx(tx); setShowForm(true); }}
-                      className="bg-card border border-border p-3 md:p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 hover:border-muted-foreground/30 active:scale-[0.99] transition-all duration-150 ease-out group cursor-pointer"
+                      className="bg-card border border-border py-2.5 px-3 md:p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 hover:border-muted-foreground/30 active:scale-[0.99] transition-all duration-150 ease-out group cursor-pointer"
                     >
-                      <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                      <div className="flex items-center gap-2.5 md:gap-4 min-w-0">
                         <div className={cn(
-                          "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200",
+                          "w-8.5 h-8.5 md:w-11 md:h-11 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200",
                           tx.type === 'INCOME' ? "bg-success/10 text-success" : "bg-foreground text-background"
                         )}>
-                          {tx.type === 'INCOME' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
+                          {tx.type === 'INCOME' ? <ArrowDown size={15} /> : <ArrowUp size={15} />}
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="font-medium text-sm md:text-base truncate">{tx.note || (tx.type === 'INCOME' ? 'Income' : 'Expense')}</span>
-                          <div className="flex items-center gap-2 mt-0.5 md:mt-1 flex-wrap">
-                            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 flex-wrap">
+                            <span className="text-[11px] md:text-xs font-medium text-muted-foreground whitespace-nowrap">
                               {new Date(tx.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                             {tx.tags && tx.tags.length > 0 && (
                               <>
-                                <span className="text-muted-foreground/30 text-xs">•</span>
-                                <div className="flex gap-1 md:gap-1.5 flex-wrap">
+                                <span className="text-muted-foreground/30 text-[10px]">•</span>
+                                <div className="flex gap-1 flex-wrap">
                                   {tx.tags.map(t => (
-                                    <span key={t?.id} className="text-[10px] uppercase tracking-wider font-bold px-1.5 md:px-2 py-0.5 rounded-sm bg-muted text-foreground">
+                                    <span key={t?.id} className="text-[9px] md:text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.25 rounded-sm bg-muted text-foreground">
                                       {t?.name}
                                     </span>
                                   ))}
@@ -257,7 +260,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className={cn(
-                        "font-bold text-base md:text-lg whitespace-nowrap ml-3 md:ml-4",
+                        "font-bold text-sm md:text-base whitespace-nowrap ml-2 md:ml-4",
                         tx.type === 'INCOME' ? "text-success" : "text-foreground"
                       )}>
                         {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}

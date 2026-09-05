@@ -144,6 +144,13 @@
     touch-action: manipulation;
   }
 
+  /* Mobile 85% root scale for breathable, airy typography & density */
+  @media (max-width: 767px) {
+    html {
+      font-size: 14px;
+    }
+  }
+
   /* Ensure inputs default to at least 16px on mobile to prevent iOS auto-zoom */
   @media (max-width: 767px) {
     input,
