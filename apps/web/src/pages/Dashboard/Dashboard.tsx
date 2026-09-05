@@ -101,16 +101,21 @@ export default function Dashboard() {
         <div className="flex flex-col gap-2">
           {/* Month Navigation */}
           <div className="flex items-center gap-2">
-            <button onClick={handlePrevMonth} className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+            <button 
+              onClick={handlePrevMonth} 
+              className="p-1.5 hover:bg-muted active:scale-90 rounded-md transition-all text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Previous Month"
+            >
               <ChevronLeft size={20} />
             </button>
             
             <div className="relative group">
               <h2 
+                key={monthName}
                 onClick={() => {
                   try { monthInputRef.current?.showPicker(); } catch { /* fallback for unsupported browsers */ }
                 }}
-                className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight cursor-pointer group-hover:text-primary transition-colors"
+                className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight cursor-pointer group-hover:text-primary transition-colors animate-month-switch"
               >
                 {monthName}
               </h2>
@@ -124,7 +129,11 @@ export default function Dashboard() {
               />
             </div>
 
-            <button onClick={handleNextMonth} className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+            <button 
+              onClick={handleNextMonth} 
+              className="p-1.5 hover:bg-muted active:scale-90 rounded-md transition-all text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Next Month"
+            >
               <ChevronRight size={20} />
             </button>
           </div>
@@ -132,7 +141,7 @@ export default function Dashboard() {
         </div>
         <button 
           onClick={() => { setSelectedTx(undefined); setFormType('EXPENSE'); setShowForm(true); }}
-          className="hidden md:flex bg-foreground text-background items-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity justify-center cursor-pointer"
+          className="hidden md:flex bg-foreground text-background items-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold hover:opacity-90 active:scale-95 transition-all justify-center cursor-pointer shadow-sm"
         >
           <Plus size={18} />
           New Transaction
@@ -141,19 +150,19 @@ export default function Dashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 relative overflow-hidden group hover:border-muted-foreground/30 transition-colors">
+        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 relative overflow-hidden group hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out">
           <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
             <WalletIcon size={80} />
           </div>
           <span className="text-sm font-medium text-muted-foreground">Net Balance</span>
-          <span className={cn("text-2xl md:text-4xl font-bold tracking-tight", net >= 0 ? "text-foreground" : "text-destructive")}>
+          <span className={cn("text-2xl md:text-4xl font-bold tracking-tight transition-colors duration-200", net >= 0 ? "text-foreground" : "text-destructive")}>
             {formatCurrency(net)}
           </span>
         </div>
         
-        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 hover:border-muted-foreground/30 transition-colors">
+        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out group">
           <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
               <ArrowDown size={12} className="text-success" />
             </div>
             Total Income
@@ -163,9 +172,9 @@ export default function Dashboard() {
           </span>
         </div>
 
-        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 hover:border-muted-foreground/30 transition-colors">
+        <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-1.5 md:gap-2 hover:border-muted-foreground/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 ease-out group">
           <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
               <ArrowUp size={12} className="text-destructive" />
             </div>
             Total Expense
@@ -217,11 +226,11 @@ export default function Dashboard() {
                     <div 
                       key={tx.id} 
                       onClick={() => { setSelectedTx(tx); setShowForm(true); }}
-                      className="bg-card border border-border p-3 md:p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors group cursor-pointer"
+                      className="bg-card border border-border p-3 md:p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 hover:border-muted-foreground/30 active:scale-[0.99] transition-all duration-150 ease-out group cursor-pointer"
                     >
                       <div className="flex items-center gap-3 md:gap-4 min-w-0">
                         <div className={cn(
-                          "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0",
+                          "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200",
                           tx.type === 'INCOME' ? "bg-success/10 text-success" : "bg-foreground text-background"
                         )}>
                           {tx.type === 'INCOME' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
@@ -271,7 +280,7 @@ export default function Dashboard() {
               <div 
                 key={tx.id} 
                 onClick={() => { setSelectedTx(tx); setShowForm(true); }}
-                className="bg-card border border-border p-3 md:p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer"
+                className="bg-card border border-border p-3 md:p-4 rounded-xl flex items-center justify-between hover:bg-muted/50 hover:border-muted-foreground/30 active:scale-[0.99] transition-all duration-150 ease-out cursor-pointer"
               >
                 <div className="flex items-center gap-3 md:gap-4 min-w-0">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-muted text-muted-foreground shrink-0">
@@ -298,11 +307,11 @@ export default function Dashboard() {
       {/* Mobile Floating Action Button (FAB) */}
       <button
         onClick={() => { setSelectedTx(undefined); setFormType('EXPENSE'); setShowForm(true); }}
-        className="md:hidden fixed right-5 bottom-20 z-30 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        className="md:hidden fixed right-5 bottom-20 z-30 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-90 transition-all duration-200 cursor-pointer animate-tab-pop"
         title="New Transaction"
         aria-label="New Transaction"
       >
-        <Plus size={26} />
+        <Plus size={26} className="transition-transform active:rotate-90 duration-200" />
       </button>
 
       {showForm && (

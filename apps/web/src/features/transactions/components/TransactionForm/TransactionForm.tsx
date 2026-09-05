@@ -17,6 +17,13 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>(initialData?.type || defaultType);
   const [amount, setAmount] = useState(initialData ? String(initialData.amount) : '');
 
+  const [isClosing, setIsClosing] = useState(false);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(onClose, 140);
+  };
+
   // Lock background scroll when modal is open
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -29,11 +36,11 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, []);
 
   const toDatetimeLocal = (timestamp: number) => {
     const d = new Date(timestamp);
@@ -75,7 +82,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
       } else {
         await TransactionService.addTransaction(data);
       }
-      onClose();
+      handleClose();
     } catch (error) {
       console.error("Error saving transaction:", error);
     }
@@ -95,18 +102,26 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
 
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className={cn(
+        "fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4",
+        isClosing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"
+      )}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
-      <div className="bg-card border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+      <div 
+        className={cn(
+          "bg-card border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col",
+          isClosing ? "animate-modal-card-out" : "animate-modal-card"
+        )}
+      >
         <div className="flex justify-between items-center px-5 py-4 border-b border-border">
           <h2 className="font-semibold text-base md:text-lg">
             {initialData ? (initialData.isVoided ? 'Transaction Details (Voided)' : 'Edit Transaction') : 'New Transaction'}
           </h2>
           <button 
             type="button"
-            onClick={onClose} 
-            className="p-1.5 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+            onClick={handleClose} 
+            className="p-1.5 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground cursor-pointer active:scale-95"
           >
             <X size={20} />
           </button>
@@ -226,7 +241,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                 onClick={async () => {
                   if (confirm('Mark this transaction as void? It will be crossed out and excluded from summaries.')) {
                     await TransactionService.voidTransaction(initialData.id!);
-                    onClose();
+                    handleClose();
                   }
                 }}
                 className="w-1/3 bg-destructive/10 text-destructive font-medium py-3 rounded-xl hover:bg-destructive/20 active:bg-destructive/30 transition-colors cursor-pointer"
@@ -240,7 +255,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                 onClick={async () => {
                   if (confirm('Restore this transaction to the main history?')) {
                     await TransactionService.restoreTransaction(initialData.id!);
-                    onClose();
+                    handleClose();
                   }
                 }}
                 className="flex-1 bg-foreground text-background font-medium py-3 rounded-xl hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer shadow-sm"

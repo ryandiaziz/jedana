@@ -45,14 +45,14 @@ export default function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[10px] font-medium transition-colors ${
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[10px] font-medium transition-all active:scale-90 duration-150 cursor-pointer ${
                 isActive 
-                  ? 'text-primary' 
+                  ? 'text-primary font-semibold' 
                   : 'text-muted-foreground active:text-foreground'
               }`}
             >
-              <item.icon size={20} className="shrink-0" />
-              <span className="leading-none">{item.label}</span>
+              <item.icon size={20} className={`shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+              <span className="leading-none transition-colors">{item.label}</span>
             </NavLink>
           );
         })}

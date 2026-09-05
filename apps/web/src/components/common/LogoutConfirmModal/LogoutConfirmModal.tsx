@@ -14,6 +14,17 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
   onConfirm,
   isLoading = false,
 }) => {
+  const [isClosing, setIsClosing] = React.useState(false);
+
+  const handleClose = () => {
+    if (isLoading) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 140);
+  };
+
   // Lock background scroll when open
   useEffect(() => {
     if (!isOpen) return;
@@ -28,24 +39,30 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isLoading) onClose();
+      if (e.key === 'Escape') handleClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isLoading, onClose]);
+  }, [isOpen, isLoading]);
 
   if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-      onClick={(e) => { if (e.target === e.currentTarget && !isLoading) onClose(); }}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 ${
+        isClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'
+      }`}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
-      <div className="relative w-full max-w-md bg-card border border-border rounded-2xl p-5 md:p-6 shadow-2xl space-y-5 md:space-y-6 animate-in zoom-in-95 duration-200">
+      <div 
+        className={`relative w-full max-w-md bg-card border border-border rounded-2xl p-5 md:p-6 shadow-2xl space-y-5 md:space-y-6 ${
+          isClosing ? 'animate-modal-card-out' : 'animate-modal-card'
+        }`}
+      >
         <button
-          onClick={onClose}
+          onClick={handleClose}
           disabled={isLoading}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 p-1.5 rounded-lg hover:bg-muted"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 p-1.5 rounded-lg hover:bg-muted cursor-pointer active:scale-95"
         >
           <X className="w-5 h-5" />
         </button>
@@ -70,9 +87,9 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
         <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end pt-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isLoading}
-            className="px-4 py-3 sm:py-2.5 rounded-xl border border-border text-muted-foreground hover:bg-muted transition-colors text-sm font-medium disabled:opacity-50 cursor-pointer"
+            className="px-4 py-3 sm:py-2.5 rounded-xl border border-border text-muted-foreground hover:bg-muted active:scale-95 transition-all text-sm font-medium disabled:opacity-50 cursor-pointer"
           >
             Batal
           </button>
