@@ -132,7 +132,7 @@ export default function Dashboard() {
         </div>
         <button 
           onClick={() => { setSelectedTx(undefined); setFormType('EXPENSE'); setShowForm(true); }}
-          className="bg-foreground text-background flex items-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
+          className="hidden md:flex bg-foreground text-background items-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity justify-center cursor-pointer"
         >
           <Plus size={18} />
           New Transaction
