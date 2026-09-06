@@ -57,15 +57,20 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-3">
-        <SettingsIcon size={24} />
-        Settings
-      </h1>
+    <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500 pb-6">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <SettingsIcon size={20} />
+          </div>
+          Settings
+        </h1>
+        <p className="text-muted-foreground text-xs sm:text-sm font-medium">Manage preferences, sync status, and developer API keys</p>
+      </header>
 
       {/* Account & Sync Section (mobile only — on desktop these are in the sidebar) */}
-      <section className="p-4 md:p-6 bg-card border border-border rounded-lg md:hidden">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Account</h2>
+      <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs md:hidden">
+        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Account & Sync</h2>
         <div className="flex flex-col gap-3">
           {isLoading ? (
             <div className="flex items-center gap-3 py-2 text-sm font-medium text-muted-foreground">
@@ -74,16 +79,16 @@ export default function Settings() {
             </div>
           ) : (
             <>
-              <div className="flex flex-col px-3 py-2.5 bg-muted/50 rounded-md">
-                <span className="text-xs text-muted-foreground font-semibold mb-1 uppercase tracking-wider">Synced as</span>
-                <span className="text-sm font-medium text-primary truncate" title={user.email}>
+              <div className="flex flex-col px-3.5 py-2.5 bg-muted/60 border border-border/50 rounded-xl">
+                <span className="text-[10px] text-muted-foreground font-semibold mb-0.5 uppercase tracking-wider">Synced as</span>
+                <span className="text-sm font-semibold text-primary truncate" title={user.email}>
                   {user.email}
                 </span>
               </div>
               
               <button 
                 onClick={handleResetSync}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium text-blue-500 hover:bg-blue-500/10 active:bg-blue-500/20"
+                className="flex items-center gap-3 px-3.5 py-3 min-h-[44px] rounded-xl transition-colors text-sm font-semibold text-blue-500 hover:bg-blue-500/10 active:scale-95 cursor-pointer"
               >
                 <RefreshCw size={18} className="shrink-0" />
                 <span>Force Sync Data</span>
@@ -91,7 +96,7 @@ export default function Settings() {
 
               <button 
                 onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium text-red-500 hover:bg-red-500/10 active:bg-red-500/20"
+                className="flex items-center gap-3 px-3.5 py-3 min-h-[44px] rounded-xl transition-colors text-sm font-semibold text-red-500 hover:bg-red-500/10 active:scale-95 cursor-pointer"
               >
                 <LogOut size={18} className="shrink-0" />
                 <span>Logout</span>
@@ -102,18 +107,18 @@ export default function Settings() {
       </section>
 
       {/* Theme Toggle (mobile only) */}
-      <section className="p-4 md:p-6 bg-card border border-border rounded-lg md:hidden">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Appearance</h2>
+      <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs md:hidden">
+        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Appearance</h2>
         <ThemeToggle isSidebarOpen={true} />
       </section>
 
       {/* API Key Section */}
-      <section className="p-4 md:p-6 bg-card border border-border rounded-lg">
+      <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
         <ApiKeyManager />
       </section>
 
       {/* MCP Setup Instructions */}
-      <section className="p-4 md:p-6 bg-card border border-border rounded-lg">
+      <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
         <McpInstructions />
       </section>
     </div>

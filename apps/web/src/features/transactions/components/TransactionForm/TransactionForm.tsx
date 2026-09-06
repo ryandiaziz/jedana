@@ -1,4 +1,4 @@
-import { useState, useEffect, type SubmitEvent } from 'react';
+import { useState, useEffect, useCallback, type SubmitEvent } from 'react';
 import { TransactionService, type TransactionWithTags } from '../../services/transaction.service';
 import { WalletService } from '../../../wallets/services/wallet.service';
 import { TagService } from '../../../tags/services/tag.service';
@@ -19,10 +19,10 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
 
   const [isClosing, setIsClosing] = useState(false);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(onClose, 140);
-  };
+  }, [onClose]);
 
   // Lock background scroll when modal is open
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleClose]);
 
   const toDatetimeLocal = (timestamp: number) => {
     const d = new Date(timestamp);
@@ -103,39 +103,49 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
   return (
     <div 
       className={cn(
-        "fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4",
+        "fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center sm:p-4",
         isClosing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"
       )}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div 
         className={cn(
-          "bg-card border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col",
-          isClosing ? "animate-modal-card-out" : "animate-modal-card"
+          "bg-card border-t sm:border border-border/80 w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col",
+          isClosing ? "animate-drawer-out sm:animate-modal-card-out" : "animate-drawer-in sm:animate-modal-card"
         )}
       >
-        <div className="flex justify-between items-center px-4 py-3 sm:px-5 sm:py-3.5 border-b border-border">
-          <h2 className="font-semibold text-base sm:text-lg">
+        {/* Mobile Drag Indicator Handle */}
+        <div className="sm:hidden flex justify-center pt-2.5 pb-1 cursor-grab">
+          <span className="w-12 h-1.5 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        <div className="flex justify-between items-center px-5 py-3 border-b border-border/60">
+          <h2 className="font-bold text-base sm:text-lg tracking-tight">
             {initialData ? (initialData.isVoided ? 'Transaction Details (Voided)' : 'Edit Transaction') : 'New Transaction'}
           </h2>
           <button 
             type="button"
             onClick={handleClose} 
-            className="p-1 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground cursor-pointer active:scale-95"
+            className="w-9 h-9 flex items-center justify-center hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground cursor-pointer active:scale-95"
+            aria-label="Close form"
           >
-            <X size={18} className="sm:w-5 sm:h-5" />
+            <X size={20} />
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-3.5 sm:p-5 flex flex-col gap-3 sm:gap-4 overflow-y-auto flex-1">
-          <fieldset disabled={initialData?.isVoided} className="flex flex-col gap-3 sm:gap-4">
-          <div className="flex bg-muted rounded-lg p-1">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 flex flex-col gap-4 overflow-y-auto flex-1">
+          <fieldset disabled={initialData?.isVoided} className="flex flex-col gap-4">
+          
+          {/* Segmented Type Toggle (Expense / Income) */}
+          <div className="flex bg-muted/70 p-1 rounded-2xl border border-border/50">
             <button
               type="button"
               onClick={() => setType('EXPENSE')}
               className={cn(
-                "flex-1 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all cursor-pointer",
-                type === 'EXPENSE' ? "bg-card text-foreground shadow-sm font-semibold" : "text-muted-foreground hover:text-foreground"
+                "flex-1 h-11 sm:h-10 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                type === 'EXPENSE' 
+                  ? "bg-destructive text-white shadow-md shadow-destructive/25" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Expense
@@ -144,21 +154,44 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
               type="button"
               onClick={() => setType('INCOME')}
               className={cn(
-                "flex-1 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all cursor-pointer",
-                type === 'INCOME' ? "bg-card text-foreground shadow-sm font-semibold" : "text-muted-foreground hover:text-foreground"
+                "flex-1 h-11 sm:h-10 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                type === 'INCOME' 
+                  ? "bg-success text-white shadow-md shadow-success/25" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Income
             </button>
           </div>
 
+          {/* Amount Input with Jumbo Display */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Amount</label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-muted-foreground font-bold text-base select-none pointer-events-none font-mono">
+                Rp
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                required
+                value={formatAmountDisplay(amount)}
+                onChange={handleAmountChange}
+                className="w-full bg-background border border-border/80 rounded-2xl pl-12 pr-4 py-3 text-xl sm:text-2xl font-extrabold font-mono font-tabular focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-xs"
+                placeholder="0"
+                autoFocus={!initialData}
+              />
+            </div>
+          </div>
+
+          {/* Wallet Selector */}
           {wallets && wallets.length > 0 && (
-            <div className="flex flex-col gap-1 sm:gap-1.5">
-              <label className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Select Wallet</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Wallet / Envelope</label>
               <select 
                 value={effectiveWalletId} 
                 onChange={e => setWalletId(e.target.value)}
-                className="w-full bg-background border border-border rounded-md px-3 py-2 sm:py-2.5 text-sm focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                className="w-full bg-background border border-border/80 rounded-xl px-3.5 py-2.5 min-h-[44px] text-sm font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
                 required
               >
                 {wallets.map(w => (
@@ -168,26 +201,9 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
             </div>
           )}
 
-          <div className="flex flex-col gap-1 sm:gap-1.5">
-            <label className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Amount</label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3 text-muted-foreground font-semibold text-sm sm:text-base select-none pointer-events-none">
-                Rp
-              </span>
-              <input
-                type="text"
-                inputMode="numeric"
-                required
-                value={formatAmountDisplay(amount)}
-                onChange={handleAmountChange}
-                className="w-full bg-background border border-border rounded-md pl-10 pr-3 py-2 sm:py-2.5 text-lg sm:text-xl font-bold focus:outline-none focus:border-primary transition-colors"
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1 sm:gap-1.5">
-            <label className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Date & Time</label>
+          {/* Date & Time */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Date & Time</label>
             <div className="relative">
               <input
                 type="datetime-local"
@@ -201,14 +217,14 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                     /* fallback for unsupported browsers */
                   }
                 }}
-                className="w-full bg-background border border-border rounded-md px-3 py-2 sm:py-2.5 text-sm focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                className="w-full bg-background border border-border/80 rounded-xl px-3.5 py-2.5 min-h-[44px] text-sm font-mono font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
               />
             </div>
           </div>
 
           <SmartInput
             label="Location / Payee"
-            placeholder="e.g., Walmart, Gas Station"
+            placeholder="e.g., Supermarket, Starbucks"
             value={payee}
             onChange={setPayee}
             options={allPayees || []}
@@ -216,8 +232,8 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           />
 
           <SmartInput
-            label="Note"
-            placeholder="Lunch, gas, etc."
+            label="Note / Description"
+            placeholder="Lunch with team, groceries, etc."
             value={note}
             onChange={setNote}
             options={payee ? (frequentNotes || []) : []}
@@ -234,7 +250,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           />
           </fieldset>
 
-          <div className="flex gap-2 sm:gap-2.5 mt-1 sm:mt-2 pt-1 pb-1">
+          <div className="flex gap-2.5 mt-2 pt-2" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
             {initialData && !initialData.isVoided && (
               <button 
                 type="button" 
@@ -244,7 +260,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                     handleClose();
                   }
                 }}
-                className="w-1/3 bg-destructive/10 text-destructive font-medium py-2.5 sm:py-3 text-sm rounded-xl hover:bg-destructive/20 active:bg-destructive/30 transition-colors cursor-pointer"
+                className="w-1/3 bg-destructive/10 text-destructive font-semibold py-3 min-h-[48px] text-sm rounded-xl hover:bg-destructive/20 active:scale-95 transition-all cursor-pointer"
               >
                 Void
               </button>
@@ -258,14 +274,17 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
                     handleClose();
                   }
                 }}
-                className="flex-1 bg-foreground text-background font-medium py-2.5 sm:py-3 text-sm rounded-xl hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer shadow-sm"
+                className="flex-1 bg-foreground text-background font-bold py-3 min-h-[48px] text-sm rounded-xl hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-sm"
               >
                 Restore Transaction
               </button>
             )}
             {!initialData?.isVoided && (
-              <button type="submit" className="flex-1 bg-primary text-primary-foreground font-semibold py-2.5 sm:py-3 text-sm rounded-xl hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer shadow-sm">
-                Save
+              <button 
+                type="submit" 
+                className="flex-1 bg-primary text-primary-foreground font-bold py-3 min-h-[48px] text-sm rounded-xl hover:bg-primary/90 active:scale-95 transition-all cursor-pointer shadow-md shadow-primary/25"
+              >
+                Save Transaction
               </button>
             )}
           </div>

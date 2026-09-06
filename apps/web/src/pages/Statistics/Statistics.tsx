@@ -103,8 +103,17 @@ export default function Statistics() {
     return Object.values(groups).sort((a, b) => a.timestamp - b.timestamp);
   }, [validTransactions, period]);
 
-  // Premium monochrome/neutral palette that is highly visible on dark backgrounds
-  const COLORS = ['#ffffff', '#e4e4e7', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#27272a'];
+  // Harmonious multi-color fintech palette with high contrast in both themes
+  const COLORS = [
+    '#6366F1', // Indigo
+    '#10B981', // Emerald
+    '#F59E0B', // Amber
+    '#EC4899', // Pink
+    '#06B6D4', // Cyan
+    '#8B5CF6', // Purple
+    '#F97316', // Orange
+    '#64748B', // Slate
+  ];
 
   const seedDummyData = async () => {
     if (!confirm('This will generate hundreds of dummy data for 2025-2026. Continue?')) return;
@@ -149,36 +158,41 @@ export default function Statistics() {
   };
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
+    <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500 pb-6">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Statistics</h2>
-          <p className="text-muted-foreground text-sm font-medium">Visual analysis of your cash flow</p>
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Financial Statistics</h2>
+          <p className="text-muted-foreground text-xs sm:text-sm font-medium">Visual cash flow and expense breakdown</p>
         </div>
-        <button onClick={seedDummyData} className="flex items-center gap-2 px-3 py-1.5 bg-muted hover:bg-muted/80 text-xs font-semibold rounded-md text-muted-foreground transition-colors">
+        <button 
+          onClick={seedDummyData} 
+          className="flex items-center gap-2 px-3.5 py-2 bg-muted/80 hover:bg-muted text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground transition-all cursor-pointer border border-border/50"
+        >
           <Wand2 size={14} />
-          Inject Dummy
+          Seed Mock Data
         </button>
       </header>
 
-      {/* Filter Section */}
-      <div className="bg-card border border-border p-4 md:p-5 rounded-xl flex flex-col gap-4">
-        <div className="flex items-center gap-2 text-sm font-bold tracking-tight">
-          <Filter size={16} />
-          Filter Data
+      {/* Filter Section (Bento Card) */}
+      <div className="bg-card border border-border/80 p-5 rounded-2xl shadow-xs flex flex-col gap-4">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <Filter size={15} />
+          Filter Analytics
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Time Range</label>
-            <div className="flex bg-muted rounded-md p-1">
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Time Range</label>
+            <div className="flex bg-muted/70 rounded-xl p-1 border border-border/50">
               {(['MONTH', 'YEAR', 'ALL'] as const).map(p => (
                 <button
                   key={p}
                   onClick={() => setPeriod(p)}
                   className={cn(
-                    "flex-1 py-1.5 text-xs font-medium rounded-sm transition-all",
-                    period === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    "flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer",
+                    period === p 
+                      ? "bg-card text-foreground shadow-xs" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {p === 'MONTH' ? 'Month' : p === 'YEAR' ? 'Year' : 'All'}
@@ -200,18 +214,18 @@ export default function Statistics() {
                     setCurrentDate(new Date(Number(e.target.value), 0, 1));
                   }
                 }}
-                className="mt-2 w-full bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary transition-colors"
+                className="mt-1 w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
                 title="Select Time"
               />
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Transaction Type</label>
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Transaction Type</label>
             <select 
               value={typeFilter} 
               onChange={e => setTypeFilter(e.target.value as 'ALL' | 'INCOME' | 'EXPENSE')}
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-9.5"
+              className="w-full bg-background border border-border/80 rounded-xl px-3.5 py-2.5 min-h-[44px] text-sm font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
             >
               <option value="ALL">All Types</option>
               <option value="EXPENSE">Expense Only</option>
@@ -219,12 +233,12 @@ export default function Statistics() {
             </select>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Wallet</label>
+          <div className="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Wallet / Envelope</label>
             <select 
               value={walletFilter} 
               onChange={e => setWalletFilter(e.target.value)}
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors h-9.5"
+              className="w-full bg-background border border-border/80 rounded-xl px-3.5 py-2.5 min-h-[44px] text-sm font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
             >
               <option value="ALL">All Wallets</option>
               {wallets.map(w => (
@@ -236,28 +250,30 @@ export default function Statistics() {
       </div>
 
       {validTransactions.length === 0 ? (
-        <div className="bg-card border border-border border-dashed p-12 rounded-xl text-center flex flex-col items-center justify-center gap-2 text-muted-foreground">
+        <div className="bg-card border border-border/80 border-dashed p-12 rounded-2xl text-center flex flex-col items-center justify-center gap-2 text-muted-foreground">
           <PieIcon size={32} className="opacity-50" />
-          <p className="text-sm mt-2">No transaction data for these filter criteria.</p>
+          <p className="text-sm mt-2">No transaction data available for the chosen filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pie Chart */}
-          <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-4 md:gap-6 hover:border-muted-foreground/30 transition-colors">
-            <div className="flex items-center gap-2 font-semibold">
-              <PieIcon size={18} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          {/* Pie Chart Bento Card */}
+          <div className="bg-card border border-border/80 p-5 md:p-6 rounded-2xl flex flex-col gap-4 shadow-xs hover:border-primary/40 transition-all">
+            <div className="flex items-center gap-2 font-bold text-base tracking-tight">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <PieIcon size={16} />
+              </div>
               Composition by Tag
             </div>
-            <div className="h-62.5 md:h-75 w-full">
+            <div className="h-64 md:h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
+                    innerRadius={55}
                     outerRadius={85}
-                    paddingAngle={2}
+                    paddingAngle={3}
                     dataKey="value"
                     stroke="none"
                   >
@@ -267,62 +283,73 @@ export default function Statistics() {
                   </Pie>
                   <Tooltip 
                     formatter={(value: unknown) => formatCurrency(Number(value) || 0)}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #27272a', backgroundColor: '#09090b', color: '#ffffff' }}
-                    itemStyle={{ color: '#ffffff' }}
+                    contentStyle={{ 
+                      borderRadius: '12px', 
+                      border: '1px solid var(--color-border)', 
+                      backgroundColor: 'var(--color-card)', 
+                      color: 'var(--color-card-foreground)',
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
+                    }}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{ paddingTop: '10px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Bar Chart */}
-          <div className="bg-card border border-border p-4 md:p-6 rounded-xl flex flex-col gap-4 md:gap-6 hover:border-muted-foreground/30 transition-colors">
-            <div className="flex items-center gap-2 font-semibold">
-              <BarChart3 size={18} />
-              Trend - {typeFilter === 'INCOME' ? 'Income' : typeFilter === 'EXPENSE' ? 'Expense' : 'Activity'}
+          {/* Bar Chart Bento Card */}
+          <div className="bg-card border border-border/80 p-5 md:p-6 rounded-2xl flex flex-col gap-4 shadow-xs hover:border-primary/40 transition-all">
+            <div className="flex items-center gap-2 font-bold text-base tracking-tight">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <BarChart3 size={16} />
+              </div>
+              Trend Overview
             </div>
-            <div className="h-62.5 md:h-75 w-full">
+            <div className="h-64 md:h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.5} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.6} />
                   <XAxis 
                     dataKey="label" 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: '#a1a1aa' }}
+                    tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
                     dy={10}
                   />
                   <YAxis 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: '#a1a1aa' }}
-                    tickFormatter={(value) => `IDR ${(value / 1000)}k`}
-                    width={80}
+                    tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
+                    tickFormatter={(value) => `${(value / 1000)}k`}
+                    width={55}
                   />
                   <Tooltip 
                     formatter={(value: unknown, name: unknown) => [formatCurrency(Number(value) || 0), name === 'income' ? 'Income' : 'Expense']}
-                    cursor={{ fill: '#27272a' }}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #27272a', backgroundColor: '#09090b', color: '#ffffff' }}
-                    itemStyle={{ color: '#ffffff' }}
+                    contentStyle={{ 
+                      borderRadius: '12px', 
+                      border: '1px solid var(--color-border)', 
+                      backgroundColor: 'var(--color-card)', 
+                      color: 'var(--color-card-foreground)',
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
+                    }}
                   />
-                  {typeFilter === 'ALL' && <Legend />}
+                  {typeFilter === 'ALL' && <Legend wrapperStyle={{ paddingTop: '10px' }} />}
                   {typeFilter !== 'EXPENSE' && (
                     <Bar 
                       name="income"
                       dataKey="income" 
-                      fill="#22c55e" 
-                      radius={[4, 4, 0, 0]} 
-                      maxBarSize={50}
+                      fill="#10B981" 
+                      radius={[6, 6, 0, 0]} 
+                      maxBarSize={40}
                     />
                   )}
                   {typeFilter !== 'INCOME' && (
                     <Bar 
                       name="expense"
                       dataKey="expense" 
-                      fill="#ef4444" 
-                      radius={[4, 4, 0, 0]} 
-                      maxBarSize={50}
+                      fill="#F43F5E" 
+                      radius={[6, 6, 0, 0]} 
+                      maxBarSize={40}
                     />
                   )}
                 </BarChart>

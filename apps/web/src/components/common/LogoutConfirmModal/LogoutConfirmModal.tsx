@@ -16,14 +16,14 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
 }) => {
   const [isClosing, setIsClosing] = React.useState(false);
 
-  const handleClose = () => {
+  const handleClose = React.useCallback(() => {
     if (isLoading) return;
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
       onClose();
     }, 140);
-  };
+  }, [isLoading, onClose]);
 
   // Lock background scroll when open
   useEffect(() => {
@@ -43,7 +43,7 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isLoading]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
