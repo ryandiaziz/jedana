@@ -7,30 +7,32 @@ import Tags from './pages/Tags';
 import Statistics from './pages/Statistics';
 import Settings from './pages/Settings';
 
-import { AuthProvider } from './context';
+import { AuthProvider, PreferencesProvider } from './context';
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="jedana-theme">
       <AuthProvider>
-        <BrowserRouter>
-          <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground">
-            <Sidebar />
-            
-            {/* Main Content */}
-            <main className="flex-1 px-4 py-4 sm:px-6 md:p-8 lg:p-10 pb-28 md:pb-10 overflow-x-hidden">
-              <div className="max-w-5xl mx-auto">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/wallets" element={<Wallets />} />
-                  <Route path="/tags" element={<Tags />} />
-                  <Route path="/statistics" element={<Statistics />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Routes>
-              </div>
-            </main>
-          </div>
-        </BrowserRouter>
+        <PreferencesProvider>
+          <BrowserRouter>
+            <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground">
+              <Sidebar />
+              
+              {/* Main Content */}
+              <main className="flex-1 px-4 py-4 sm:px-6 md:p-8 lg:p-10 pb-28 md:pb-10 overflow-x-hidden">
+                <div className="max-w-5xl mx-auto">
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/wallets" element={<Wallets />} />
+                    <Route path="/tags" element={<Tags />} />
+                    <Route path="/statistics" element={<Statistics />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Routes>
+                </div>
+              </main>
+            </div>
+          </BrowserRouter>
+        </PreferencesProvider>
       </AuthProvider>
     </ThemeProvider>
   );

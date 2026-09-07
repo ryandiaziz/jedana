@@ -1,8 +1,9 @@
-import { ApiKeyManager, McpInstructions } from '../../features/settings';
+import { ApiKeyManager, McpInstructions, PreferencesManager } from '../../features/settings';
 import { useAuth } from '../../context';
 import { Settings as SettingsIcon, RefreshCw, LogOut, Loader2 } from 'lucide-react';
 import ThemeToggle from '../../components/common/ThemeToggle';
 import { db } from '../../db/db';
+
 
 export default function Settings() {
   const { user, isLoading, logout } = useAuth();
@@ -29,25 +30,35 @@ export default function Settings() {
 
   if (!user) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-3">
-          <SettingsIcon size={24} />
-          Settings
-        </h1>
+      <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500 pb-6">
+        <header className="flex flex-col gap-1">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <SettingsIcon size={20} />
+            </div>
+            Settings
+          </h1>
+          <p className="text-muted-foreground text-xs sm:text-sm font-medium">Manage preferences, sync status, and developer API keys</p>
+        </header>
+
+        {/* Financial Preferences Section */}
+        <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
+          <PreferencesManager />
+        </section>
 
         {/* Theme Toggle (mobile) */}
-        <section className="p-4 md:p-6 bg-card border border-border rounded-lg md:hidden">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Appearance</h2>
+        <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs md:hidden">
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Appearance</h2>
           <ThemeToggle isSidebarOpen={true} />
         </section>
 
-        <div className="px-4 py-8 bg-card border border-border rounded-lg text-center">
-          <p className="text-muted-foreground">
-            Login terlebih dahulu untuk mengakses Settings dan fitur MCP.
+        <div className="px-5 py-8 bg-card border border-border/80 rounded-2xl text-center">
+          <p className="text-sm text-muted-foreground">
+            Login terlebih dahulu untuk menyinkronkan data antar-perangkat dan mengakses fitur developer API / MCP.
           </p>
           <a
             href="/api/auth/google"
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-95 transition-all shadow-sm shadow-primary/25 cursor-pointer"
           >
             Login via Google
           </a>
@@ -110,6 +121,11 @@ export default function Settings() {
       <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs md:hidden">
         <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Appearance</h2>
         <ThemeToggle isSidebarOpen={true} />
+      </section>
+
+      {/* Financial Preferences Section */}
+      <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
+        <PreferencesManager />
       </section>
 
       {/* API Key Section */}

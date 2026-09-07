@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings } from 'lucide-react';
 import ThemeToggle from '../../common/ThemeToggle';
-import { useAuth } from '../../../context';
+import { useAuth, usePreferences } from '../../../context';
 import { db } from '../../../db/db';
 
 const navItems = [
@@ -16,7 +16,14 @@ const navItems = [
 export default function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { user, isLoading, logout } = useAuth();
+  const { isMultiWalletEnabled } = usePreferences();
   const location = useLocation();
+
+  const filteredNavItems = navItems.filter(item => {
+    if (item.to === '/wallets' && !isMultiWalletEnabled) return false;
+    return true;
+  });
+
 
   const handleLogout = () => {
     logout();
@@ -43,7 +50,7 @@ export default function Sidebar() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         aria-label="Mobile Navigation"
       >
-        {navItems.map(item => {
+        {filteredNavItems.map(item => {
           const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
           return (
             <NavLink
@@ -105,7 +112,7 @@ export default function Sidebar() {
           )}
         </div>
         <nav className="flex flex-col gap-1.5">
-          {navItems.map(item => (
+          {filteredNavItems.map(item => (
             <NavLink 
               key={item.to}
               to={item.to} 

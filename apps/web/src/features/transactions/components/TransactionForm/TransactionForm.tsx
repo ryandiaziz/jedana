@@ -6,6 +6,8 @@ import { cn } from '../../../../utils/cn';
 import { X } from 'lucide-react';
 import { SmartInput } from '../../../../components/common/SmartInput';
 import { SmartTagsInput } from '../../../../components/common/SmartTagsInput';
+import { usePreferences } from '../../../../context';
+
 
 interface TransactionFormProps {
   onClose: () => void;
@@ -53,6 +55,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
   const [note, setNote] = useState(initialData?.note || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData ? initialData.tags.map(t => t.name) : []);
   
+  const { isMultiWalletEnabled } = usePreferences();
   const wallets = WalletService.useWallets();
   const allTags = TagService.useFrequentTags();
   const allPayees = TransactionService.usePayees();
@@ -61,6 +64,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
   const [walletId, setWalletId] = useState<string | ''>(initialData?.walletId || '');
 
   const effectiveWalletId = walletId || (wallets && wallets.length > 0 ? wallets[0].id! : '');
+
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -184,8 +188,8 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
             </div>
           </div>
 
-          {/* Wallet Selector */}
-          {wallets && wallets.length > 0 && (
+          {/* Wallet Selector (Only if Multi-Wallet mode is enabled) */}
+          {isMultiWalletEnabled && wallets && wallets.length > 0 && (
             <div className="flex flex-col gap-1.5">
               <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Wallet / Envelope</label>
               <select 

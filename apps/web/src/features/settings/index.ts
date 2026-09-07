@@ -1,1 +1,2 @@
-export { ApiKeyManager, McpInstructions } from './components';
+export { ApiKeyManager, McpInstructions, PreferencesManager } from './components';
+

@@ -3,8 +3,11 @@ import { Plus, ArrowDown, ArrowUp, Wallet as WalletIcon, ChevronLeft, ChevronRig
 import TransactionForm from '../../features/transactions/components/TransactionForm';
 import { TransactionService, type TransactionWithTags } from '../../features/transactions/services/transaction.service';
 import { cn } from '../../utils/cn';
+import { usePreferences } from '../../context';
+import { getCycleRange } from '../../utils/dateCycle';
 
 export default function Dashboard() {
+  const { startDayOfMonth, isMultiWalletEnabled } = usePreferences();
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
   const [selectedTx, setSelectedTx] = useState<TransactionWithTags | undefined>(undefined);
@@ -13,18 +16,10 @@ export default function Dashboard() {
   // State for Month Navigation
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
 
-  const { startDate, endDate, monthName, monthInputValue } = useMemo(() => {
-    const start = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth(), 1).getTime();
-    const end = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
-    const month = currentMonthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    
-    // YYYY-MM for <input type="month">
-    const yyyy = currentMonthDate.getFullYear();
-    const mm = String(currentMonthDate.getMonth() + 1).padStart(2, '0');
-    const inputValue = `${yyyy}-${mm}`;
-    
-    return { startDate: start, endDate: end, monthName: month, monthInputValue: inputValue };
-  }, [currentMonthDate]);
+  const { startDate, endDate, monthName, monthInputValue, rangeLabel } = useMemo(() => {
+    return getCycleRange(currentMonthDate, startDayOfMonth);
+  }, [currentMonthDate, startDayOfMonth]);
+
 
   const handlePrevMonth = () => {
     setCurrentMonthDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -112,15 +107,24 @@ export default function Dashboard() {
             </button>
             
             <div className="relative group px-1">
-              <h2 
-                key={monthName}
+              <div 
                 onClick={() => {
                   try { monthInputRef.current?.showPicker(); } catch { /* fallback for unsupported browsers */ }
                 }}
-                className="text-base sm:text-lg md:text-xl font-bold tracking-tight cursor-pointer group-hover:text-primary transition-colors animate-month-switch select-none"
+                className="flex flex-col cursor-pointer select-none"
               >
-                {monthName}
-              </h2>
+                <h2 
+                  key={monthName}
+                  className="text-base sm:text-lg md:text-xl font-bold tracking-tight group-hover:text-primary transition-colors animate-month-switch"
+                >
+                  {monthName}
+                </h2>
+                {startDayOfMonth !== 1 && (
+                  <span className="text-[10px] sm:text-[11px] font-mono font-tabular font-semibold text-primary -mt-0.5 tracking-tight whitespace-nowrap">
+                    {rangeLabel}
+                  </span>
+                )}
+              </div>
               <input 
                 ref={monthInputRef}
                 type="month" 
@@ -140,7 +144,9 @@ export default function Dashboard() {
               <ChevronRight size={18} />
             </button>
           </div>
-          <p className="text-muted-foreground text-xs font-medium pl-1">Cash flow overview across all wallets</p>
+          <p className="text-muted-foreground text-xs font-medium pl-1">
+            {isMultiWalletEnabled ? 'Cash flow overview across all wallets' : 'Cash flow overview'}
+          </p>
         </div>
 
         <button 

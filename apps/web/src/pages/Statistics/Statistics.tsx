@@ -4,8 +4,11 @@ import { WalletService } from '../../features/wallets/services/wallet.service';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { cn } from '../../utils/cn';
 import { Filter, PieChart as PieIcon, BarChart3, Wand2 } from 'lucide-react';
+import { usePreferences } from '../../context';
+import { getCycleRange } from '../../utils/dateCycle';
 
 export default function Statistics() {
+  const { startDayOfMonth, isMultiWalletEnabled } = usePreferences();
   const [period, setPeriod] = useState<'MONTH' | 'YEAR' | 'ALL'>('MONTH');
   const [currentDate, setCurrentDate] = useState(new Date());
   
@@ -15,18 +18,17 @@ export default function Statistics() {
   const wallets = WalletService.useWallets() || [];
   
   // Calculate date boundaries
-  const { startDate, endDate } = useMemo(() => {
-    if (period === 'ALL') return { startDate: undefined, endDate: undefined };
+  const { startDate, endDate, rangeLabel } = useMemo(() => {
+    if (period === 'ALL') return { startDate: undefined, endDate: undefined, rangeLabel: undefined };
     if (period === 'MONTH') {
-      const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getTime();
-      const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
-      return { startDate: start, endDate: end };
+      const cycle = getCycleRange(currentDate, startDayOfMonth);
+      return { startDate: cycle.startDate, endDate: cycle.endDate, rangeLabel: cycle.rangeLabel };
     }
     // YEAR
     const start = new Date(currentDate.getFullYear(), 0, 1).getTime();
     const end = new Date(currentDate.getFullYear(), 11, 31, 23, 59, 59, 999).getTime();
-    return { startDate: start, endDate: end };
-  }, [period, currentDate]);
+    return { startDate: start, endDate: end, rangeLabel: undefined };
+  }, [period, currentDate, startDayOfMonth]);
 
   const rawTransactions = TransactionService.useRecentTransactions(startDate, endDate);
   
@@ -36,10 +38,11 @@ export default function Statistics() {
     return rawTransactions.filter(tx => {
       if (tx.isVoided) return false;
       if (typeFilter !== 'ALL' && tx.type !== typeFilter) return false;
-      if (walletFilter !== 'ALL' && tx.walletId !== walletFilter) return false;
+      if (isMultiWalletEnabled && walletFilter !== 'ALL' && tx.walletId !== walletFilter) return false;
       return true;
     });
-  }, [rawTransactions, typeFilter, walletFilter]);
+  }, [rawTransactions, typeFilter, walletFilter, isMultiWalletEnabled]);
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -180,7 +183,7 @@ export default function Statistics() {
           Filter Analytics
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+        <div className={cn("grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4", isMultiWalletEnabled ? "md:grid-cols-3" : "md:grid-cols-2")}>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Time Range</label>
             <div className="flex bg-muted/70 rounded-xl p-1 border border-border/50">
@@ -218,6 +221,11 @@ export default function Statistics() {
                 title="Select Time"
               />
             )}
+            {period === 'MONTH' && startDayOfMonth !== 1 && rangeLabel && (
+              <span className="text-[11px] font-mono font-tabular font-semibold text-primary mt-0.5 pl-1">
+                {rangeLabel}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -233,19 +241,21 @@ export default function Statistics() {
             </select>
           </div>
 
-          <div className="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
-            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Wallet / Envelope</label>
-            <select 
-              value={walletFilter} 
-              onChange={e => setWalletFilter(e.target.value)}
-              className="w-full bg-background border border-border/80 rounded-xl px-3.5 py-2.5 min-h-[44px] text-sm font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
-            >
-              <option value="ALL">All Wallets</option>
-              {wallets.map(w => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
-          </div>
+          {isMultiWalletEnabled && (
+            <div className="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Wallet / Envelope</label>
+              <select 
+                value={walletFilter} 
+                onChange={e => setWalletFilter(e.target.value)}
+                className="w-full bg-background border border-border/80 rounded-xl px-3.5 py-2.5 min-h-[44px] text-sm font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
+              >
+                <option value="ALL">All Wallets</option>
+                {wallets.map(w => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
