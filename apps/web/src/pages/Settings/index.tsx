@@ -1,4 +1,4 @@
-import { ApiKeyManager, McpInstructions, FinancialCycleSetting } from '../../features/settings';
+import { ApiKeyManager, McpInstructions, FinancialCycleSetting, DataBackupSetting } from '../../features/settings';
 import { useAuth } from '../../context';
 import { Settings as SettingsIcon, RefreshCw, LogOut, Loader2 } from 'lucide-react';
 import ThemeToggle from '../../components/common/ThemeToggle';
@@ -43,6 +43,11 @@ export default function Settings() {
         {/* Financial Cycle Setting */}
         <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
           <FinancialCycleSetting />
+        </section>
+
+        {/* Data & Backup */}
+        <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
+          <DataBackupSetting />
         </section>
 
         {/* Theme Toggle (mobile) */}
@@ -125,6 +130,11 @@ export default function Settings() {
       {/* Financial Cycle Setting */}
       <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
         <FinancialCycleSetting />
+      </section>
+
+      {/* Data & Backup Section */}
+      <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
+        <DataBackupSetting />
       </section>
 
       {/* API Key Section */}

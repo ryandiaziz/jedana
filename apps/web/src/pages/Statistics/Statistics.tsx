@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
 import { TransactionService } from '../../features/transactions/services/transaction.service';
 import { WalletService } from '../../features/wallets/services/wallet.service';
+import { exportTransactionsToCSV } from '../../features/transactions/services/export.service';
+import { TopPayees } from '../../features/transactions/components/TopPayees';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { cn } from '../../utils/cn';
-import { Filter, PieChart as PieIcon, BarChart3, Wand2 } from 'lucide-react';
+import { Filter, PieChart as PieIcon, BarChart3, Wand2, Download } from 'lucide-react';
 
 export default function Statistics() {
   const [period, setPeriod] = useState<'MONTH' | 'YEAR' | 'ALL'>('MONTH');
@@ -12,7 +14,8 @@ export default function Statistics() {
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('EXPENSE');
   const [walletFilter, setWalletFilter] = useState<string | 'ALL'>('ALL');
   
-  const wallets = WalletService.useWallets() || [];
+  const rawWallets = WalletService.useWallets();
+  const wallets = useMemo(() => rawWallets || [], [rawWallets]);
   
   // Calculate date boundaries
   const { startDate, endDate } = useMemo(() => {
@@ -40,6 +43,27 @@ export default function Statistics() {
       return true;
     });
   }, [rawTransactions, typeFilter, walletFilter]);
+
+  // Map wallet IDs to names for export
+  const walletMap = useMemo(() => {
+    const map = new Map<string, string>();
+    wallets.forEach(w => {
+      if (w.id) map.set(w.id, w.name);
+    });
+    return map;
+  }, [wallets]);
+
+  const handleExportCSV = () => {
+    let periodSuffix = 'all';
+    if (period === 'MONTH') {
+      periodSuffix = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    } else if (period === 'YEAR') {
+      periodSuffix = `${currentDate.getFullYear()}`;
+    }
+    const typeSuffix = typeFilter.toLowerCase();
+    const filename = `jedana-transactions-${periodSuffix}-${typeSuffix}.csv`;
+    exportTransactionsToCSV(validTransactions, { filename, walletMap });
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -164,13 +188,26 @@ export default function Statistics() {
           <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Financial Statistics</h2>
           <p className="text-muted-foreground text-xs sm:text-sm font-medium">Visual cash flow and expense breakdown</p>
         </div>
-        <button 
-          onClick={seedDummyData} 
-          className="flex items-center gap-2 px-3.5 py-2 bg-muted/80 hover:bg-muted text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground transition-all cursor-pointer border border-border/50"
-        >
-          <Wand2 size={14} />
-          Seed Mock Data
-        </button>
+        <div className="flex items-center flex-wrap gap-2">
+          {validTransactions.length > 0 && (
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] bg-primary/10 hover:bg-primary/20 text-xs font-semibold rounded-xl text-primary transition-all cursor-pointer border border-primary/20 active:scale-95 shadow-xs"
+              title="Export filtered transactions to CSV"
+            >
+              <Download size={15} />
+              <span>Export CSV</span>
+              <span className="font-mono font-tabular opacity-75">({validTransactions.length})</span>
+            </button>
+          )}
+          <button 
+            onClick={seedDummyData} 
+            className="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] bg-muted/80 hover:bg-muted text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground transition-all cursor-pointer border border-border/50 active:scale-95"
+          >
+            <Wand2 size={15} />
+            <span>Seed Mock Data</span>
+          </button>
+        </div>
       </header>
 
       {/* Filter Section (Bento Card) */}
@@ -355,6 +392,11 @@ export default function Statistics() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+          </div>
+
+          {/* Top Payees Ranking Section */}
+          <div className="col-span-1 lg:col-span-2">
+            <TopPayees transactions={validTransactions} typeFilter={typeFilter} />
           </div>
         </div>
       )}

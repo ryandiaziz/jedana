@@ -14,6 +14,7 @@ import {
 import TransactionForm from '../../features/transactions/components/TransactionForm';
 import { TransactionService, type TransactionWithTags } from '../../features/transactions/services/transaction.service';
 import { TransactionSearch, type FilterCriteria } from '../../features/transactions/components/TransactionSearch';
+import { SpendingAnomalyAlert } from '../../features/transactions/components/SpendingAnomalyAlert';
 import { BudgetOverview } from '../../features/budgets';
 import {
   getFinancialMonthStartDay,
@@ -250,6 +251,9 @@ export default function Dashboard() {
           New Transaction
         </button>
       </header>
+
+      {/* Spending Anomaly Alert Banner */}
+      <SpendingAnomalyAlert />
 
       {/* Bento Grid Summary Cards with Monthly Comparison */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
