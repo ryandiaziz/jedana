@@ -51,6 +51,19 @@ const SYNC_SCHEMA: Record<string, TableSchema> = {
     ],
     pullQuery: 'SELECT * FROM tags WHERE user_id = $1 AND updated_at > $2',
   },
+  budgets: {
+    tableName: 'budgets',
+    columns: [
+      'id',
+      'user_id',
+      'tag_id',
+      'monthly_limit',
+      'is_deleted',
+      'created_at',
+      'updated_at',
+    ],
+    pullQuery: 'SELECT * FROM budgets WHERE user_id = $1 AND updated_at > $2',
+  },
   transaction_tags: {
     tableName: 'transaction_tags',
     columns: [
@@ -88,10 +101,11 @@ export class SyncService {
     try {
       await client.query('BEGIN');
 
-      // Process in dependency order: wallets -> tags -> transactions -> transaction_tags
+      // Process in dependency order: wallets -> tags -> budgets -> transactions -> transaction_tags
       const tableOrder = [
         'wallets',
         'tags',
+        'budgets',
         'transactions',
         'transaction_tags',
       ];
@@ -296,7 +310,7 @@ export class SyncService {
         const val = row[key] === null ? undefined : row[key];
 
         // node-postgres returns BIGINT and NUMERIC as strings. Convert them to numbers.
-        if (camelKey === 'amount' || camelKey === 'date') {
+        if (camelKey === 'amount' || camelKey === 'date' || camelKey === 'monthlyLimit') {
           newObj[camelKey] = val !== undefined ? Number(val) : undefined;
         } else if (camelKey === 'createdAt' || camelKey === 'updatedAt') {
           // node-postgres returns Date objects for TIMESTAMP columns. Frontend expects numbers.

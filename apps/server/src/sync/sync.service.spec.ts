@@ -76,6 +76,39 @@ describe('SyncService', () => {
         updatedAt: new Date('2026-01-02').getTime(),
       });
     });
+
+    it('should pull budgets with camelCase mapping and numeric monthlyLimit', async () => {
+      const mockBudgets = [
+        {
+          id: 'b-1',
+          user_id: 'u1',
+          tag_id: 't-1',
+          monthly_limit: '2500000',
+          is_deleted: false,
+          created_at: new Date('2026-01-01'),
+          updated_at: new Date('2026-01-01'),
+        },
+      ];
+
+      mockPool.query.mockImplementation((query: string) => {
+        if (query.includes('FROM budgets')) {
+          return Promise.resolve({ rows: mockBudgets });
+        }
+        return Promise.resolve({ rows: [] });
+      });
+
+      const result = await service.pull('u1', new Date(0));
+      expect(result.budgets).toHaveLength(1);
+      expect(result.budgets[0]).toEqual({
+        id: 'b-1',
+        userId: 'u1',
+        tagId: 't-1',
+        monthlyLimit: 2500000,
+        isDeleted: false,
+        createdAt: new Date('2026-01-01').getTime(),
+        updatedAt: new Date('2026-01-01').getTime(),
+      });
+    });
   });
 
   describe('push', () => {

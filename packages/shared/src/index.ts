@@ -37,3 +37,12 @@ export interface TransactionTag {
   updatedAt?: number;
   isDeleted?: boolean;
 }
+
+export interface Budget {
+  id?: string;
+  tagId: string;
+  monthlyLimit: number;
+  createdAt: number;
+  updatedAt?: number;
+  isDeleted?: boolean;
+}
