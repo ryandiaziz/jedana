@@ -7,19 +7,22 @@ import { X } from 'lucide-react';
 import { SmartInput } from '../../../../components/common/SmartInput';
 import { SmartTagsInput } from '../../../../components/common/SmartTagsInput';
 import { usePreferences } from '../../../../context';
-
+import { ConfirmModal } from '../../../../components/common/ConfirmModal';
 
 interface TransactionFormProps {
   onClose: () => void;
   defaultType?: 'INCOME' | 'EXPENSE';
   initialData?: TransactionWithTags;
+  isDuplicate?: boolean;
 }
 
-export default function TransactionForm({ onClose, defaultType = 'EXPENSE', initialData }: TransactionFormProps) {
+export default function TransactionForm({ onClose, defaultType = 'EXPENSE', initialData, isDuplicate = false }: TransactionFormProps) {
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>(initialData?.type || defaultType);
   const [amount, setAmount] = useState(initialData ? String(initialData.amount) : '');
 
   const [isClosing, setIsClosing] = useState(false);
+  const [showVoidConfirm, setShowVoidConfirm] = useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
 
   const handleClose = useCallback(() => {
     setIsClosing(true);
@@ -50,7 +53,9 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
     return d.toISOString().slice(0, 16);
   };
 
-  const [dateStr, setDateStr] = useState(() => toDatetimeLocal(initialData ? initialData.date : Date.now()));
+  const [dateStr, setDateStr] = useState(() =>
+    toDatetimeLocal(initialData && !isDuplicate ? initialData.date : Date.now())
+  );
   const [payee, setPayee] = useState(initialData?.payee || '');
   const [note, setNote] = useState(initialData?.note || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData ? initialData.tags.map(t => t.name) : []);
@@ -81,7 +86,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
         tags: selectedTags
       };
 
-      if (initialData?.id) {
+      if (initialData?.id && !isDuplicate) {
         await TransactionService.updateTransaction(initialData.id, data);
       } else {
         await TransactionService.addTransaction(data);
@@ -125,7 +130,13 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
 
         <div className="flex justify-between items-center px-5 py-3 border-b border-border/60">
           <h2 className="font-bold text-base sm:text-lg tracking-tight">
-            {initialData ? (initialData.isVoided ? 'Transaction Details (Voided)' : 'Edit Transaction') : 'New Transaction'}
+            {isDuplicate
+              ? 'Duplicate Transaction'
+              : initialData
+              ? initialData.isVoided
+                ? 'Transaction Details (Voided)'
+                : 'Edit Transaction'
+              : 'New Transaction'}
           </h2>
           <button 
             type="button"
@@ -258,12 +269,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
             {initialData && !initialData.isVoided && (
               <button 
                 type="button" 
-                onClick={async () => {
-                  if (confirm('Mark this transaction as void? It will be crossed out and excluded from summaries.')) {
-                    await TransactionService.voidTransaction(initialData.id!);
-                    handleClose();
-                  }
-                }}
+                onClick={() => setShowVoidConfirm(true)}
                 className="w-1/3 bg-destructive/10 text-destructive font-semibold py-3 min-h-[48px] text-sm rounded-xl hover:bg-destructive/20 active:scale-95 transition-all cursor-pointer"
               >
                 Void
@@ -272,12 +278,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
             {initialData?.isVoided && (
               <button 
                 type="button" 
-                onClick={async () => {
-                  if (confirm('Restore this transaction to the main history?')) {
-                    await TransactionService.restoreTransaction(initialData.id!);
-                    handleClose();
-                  }
-                }}
+                onClick={() => setShowRestoreConfirm(true)}
                 className="flex-1 bg-foreground text-background font-bold py-3 min-h-[48px] text-sm rounded-xl hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-sm"
               >
                 Restore Transaction
@@ -294,6 +295,38 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
           </div>
         </form>
       </div>
+
+      <ConfirmModal
+        isOpen={showVoidConfirm}
+        onClose={() => setShowVoidConfirm(false)}
+        onConfirm={async () => {
+          if (initialData?.id) {
+            await TransactionService.voidTransaction(initialData.id);
+            setShowVoidConfirm(false);
+            handleClose();
+          }
+        }}
+        title="Void Transaction"
+        description="Mark this transaction as void? It will be crossed out and excluded from summaries and statistics."
+        variant="danger"
+        confirmLabel="Void Transaction"
+      />
+
+      <ConfirmModal
+        isOpen={showRestoreConfirm}
+        onClose={() => setShowRestoreConfirm(false)}
+        onConfirm={async () => {
+          if (initialData?.id) {
+            await TransactionService.restoreTransaction(initialData.id);
+            setShowRestoreConfirm(false);
+            handleClose();
+          }
+        }}
+        title="Restore Transaction"
+        description="Restore this transaction to the active history? It will be recalculated in summaries and statistics."
+        variant="info"
+        confirmLabel="Restore Transaction"
+      />
     </div>
   );
 }

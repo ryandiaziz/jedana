@@ -37,3 +37,32 @@ export interface TransactionTag {
   updatedAt?: number;
   isDeleted?: boolean;
 }
+
+export interface Budget {
+  id?: string;
+  tagId: string;
+  monthlyLimit: number;
+  createdAt: number;
+  updatedAt?: number;
+  isDeleted?: boolean;
+}
+
+export interface RecurringTransaction {
+  id?: string;
+  walletId: string;
+  type: 'INCOME' | 'EXPENSE';
+  amount: number;
+  note: string;
+  payee?: string;
+  tags: string[];
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  dayOfMonth?: number;
+  dayOfWeek?: number;
+  startDate: number;
+  endDate?: number;
+  lastGeneratedDate?: number;
+  isActive: boolean;
+  isDeleted?: boolean;
+  createdAt: number;
+  updatedAt?: number;
+}

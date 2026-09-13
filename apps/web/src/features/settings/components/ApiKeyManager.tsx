@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Key, Plus, Trash2, Copy, Check, Loader2 } from 'lucide-react';
+import { ConfirmModal } from '../../../components/common/ConfirmModal';
 
 interface ApiKey {
   id: string;
@@ -19,6 +20,8 @@ export default function ApiKeyManager() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [revokingKey, setRevokingKey] = useState<{ id: string; name: string } | null>(null);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   const fetchKeys = useCallback(async () => {
     try {
@@ -93,20 +96,25 @@ export default function ApiKeyManager() {
     }
   };
 
-  const handleRevoke = async (keyId: string, keyName: string) => {
-    if (!confirm(`Revoke API key "${keyName}"? Agent yang menggunakan key ini tidak akan bisa mengakses Jedana lagi.`)) {
-      return;
-    }
+  const handleRevoke = (keyId: string, keyName: string) => {
+    setRevokingKey({ id: keyId, name: keyName });
+  };
 
+  const handleConfirmRevoke = async () => {
+    if (!revokingKey) return;
+    setIsRevoking(true);
     try {
-      const res = await fetch(`/api/auth/api-keys/${keyId}`, {
+      const res = await fetch(`/api/auth/api-keys/${revokingKey.id}`, {
         method: 'DELETE',
       });
 
       if (!res.ok) throw new Error('Failed to revoke API key');
       fetchKeys();
+      setRevokingKey(null);
     } catch {
       setError('Gagal merevoke API key');
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -264,6 +272,18 @@ export default function ApiKeyManager() {
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!revokingKey}
+        onClose={() => setRevokingKey(null)}
+        onConfirm={handleConfirmRevoke}
+        isLoading={isRevoking}
+        title="Revoke API Key"
+        description={`Are you sure you want to revoke API key "${revokingKey?.name}"? Any agent or external service using this key will immediately lose access to Jedana.`}
+        variant="danger"
+        confirmLabel="Revoke Key"
+        confirmIcon={Trash2}
+      />
     </div>
   );
 }

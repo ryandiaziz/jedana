@@ -1,0 +1,1 @@
+export { SpendingAnomalyAlert } from './SpendingAnomalyAlert';

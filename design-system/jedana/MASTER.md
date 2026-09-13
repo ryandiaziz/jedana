@@ -72,6 +72,37 @@
 
 ---
 
+## Brand Identity & Logo Guidelines
+
+### Concept: "Dual Ribbon Flow" (Jeda & Dana)
+- **Mindfulness Stem ("Jeda")**: Kurva utama tegak membulat berwarna Electric Indigo (`#6366F1` ke `#4338CA`), merefleksikan evaluasi diri yang tenang, teratur, dan stabil.
+- **Cashflow Loop ("Dana")**: Kurva melengkung berkesinambungan berwarna Emerald Mint (`#34D399` ke `#059669`), merefleksikan perputaran dana, pertumbuhan kekayaan, dan kelancaran finansial.
+- **Squircle Bento Base**: Wadah squircle (`rx="14"`) dengan gradien gelap (`#1E1B4B` ke `#0F172A`) dan ambient glow halus, selaras dengan estetika Bento Grid aplikasi.
+
+### Clear Space & Minimum Sizes
+- **Clear Space**: Minimal 25% dari tinggi mark di sekeliling logo (`0.25 * height`).
+- **Minimum Size**:
+  - Favicon / Status dot: `16px` (hanya mark).
+  - Navigation / Sidebar: `36px` (mark atau horizontal lockup).
+  - App Icon / Header Splash: `48px` - `64px`.
+
+### Component Usage (React 2025)
+Gunakan komponen modular `JedanaLogo` dari `@/components/common/Logo`:
+```tsx
+import { JedanaLogo } from '@/components/common/Logo';
+
+// Sidebar collapsed
+<JedanaLogo variant="mark" size="md" />
+
+// Header / Login / Splash
+<JedanaLogo variant="full" size="lg" />
+
+// Standalone mark without squircle
+<JedanaLogo variant="mark" withBadge={false} size={28} />
+```
+
+---
+
 ## Component Specs
 
 ### Buttons

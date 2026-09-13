@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings } from 'lucide-react';
+import { NavLink, useLocation, Link } from 'react-router-dom';
+import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings, Repeat } from 'lucide-react';
 import ThemeToggle from '../../common/ThemeToggle';
+import { ConfirmModal } from '../../common/ConfirmModal';
+import { JedanaLogo } from '../../common/Logo';
 import { useAuth, usePreferences } from '../../../context';
 import { db } from '../../../db/db';
 
@@ -9,12 +11,15 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/statistics', icon: PieChart, label: 'Statistics' },
   { to: '/wallets', icon: Wallet, label: 'Wallets' },
+  { to: '/recurring', icon: Repeat, label: 'Recurring' },
   { to: '/tags', icon: TagsIcon, label: 'Tags' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showResetSyncModal, setShowResetSyncModal] = useState(false);
+  const [isResettingSync, setIsResettingSync] = useState(false);
   const { user, isLoading, logout } = useAuth();
   const { isMultiWalletEnabled } = usePreferences();
   const location = useLocation();
@@ -29,8 +34,13 @@ export default function Sidebar() {
     logout();
   };
 
-  const handleResetSync = async () => {
-    if (window.confirm("This will clear potentially corrupted local data and re-download your entire transaction history directly from the server. Continue?")) {
+  const handleResetSync = () => {
+    setShowResetSyncModal(true);
+  };
+
+  const handleConfirmResetSync = async () => {
+    setIsResettingSync(true);
+    try {
       // Wipe IndexedDB Data
       await Promise.all(db.tables.map(table => table.clear()));
       
@@ -39,6 +49,9 @@ export default function Sidebar() {
       
       // Force reload to trigger a fresh sync on boot without logging out
       window.location.reload();
+    } catch (err) {
+      console.error('Failed to reset sync:', err);
+      setIsResettingSync(false);
     }
   };
 
@@ -81,33 +94,45 @@ export default function Sidebar() {
       {/* ==================== DESKTOP SIDEBAR ==================== */}
       <aside className={`hidden md:flex bg-card border-r border-border p-4 flex-col gap-6 h-screen sticky top-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
         <div className="flex items-center gap-2.5 px-1 py-1">
-          <button 
-            onClick={() => !isSidebarOpen && setIsSidebarOpen(true)}
-            className={`group w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-primary text-white flex items-center justify-center shrink-0 shadow-sm shadow-primary/25 ${!isSidebarOpen ? 'hover:scale-105 transition-transform cursor-pointer' : 'cursor-default'}`}
-            title={!isSidebarOpen ? "Expand Sidebar" : undefined}
-          >
-            <span className={`text-white font-bold text-sm ${!isSidebarOpen && 'group-hover:hidden'}`}>J</span>
-            {!isSidebarOpen && (
-              <ChevronRight size={18} className="text-white hidden group-hover:block" />
-            )}
-          </button>
-
-          {isSidebarOpen && (
-            <div className="flex flex-col">
-              <h1 className="font-bold text-lg tracking-tight leading-none">Jedana</h1>
-              <span className="text-[11px] text-muted-foreground font-medium">Finance Tracker</span>
-            </div>
-          )}
-          
-          {/* Collapse button */}
-          {isSidebarOpen && (
+          {isSidebarOpen ? (
+            <>
+              <Link 
+                to="/" 
+                className="flex items-center gap-2.5 group cursor-pointer" 
+                title="Jedana Dashboard"
+              >
+                <JedanaLogo variant="mark" size={36} className="group-hover:scale-105 transition-transform" />
+                <div className="flex flex-col">
+                  <h1 className="font-bold text-lg tracking-tight leading-none text-foreground group-hover:text-primary transition-colors">
+                    Jedana
+                  </h1>
+                  <span className="text-[11px] text-muted-foreground font-medium">Finance Tracker</span>
+                </div>
+              </Link>
+              
+              {/* Collapse button */}
+              <button 
+                onClick={() => setIsSidebarOpen(false)}
+                className="ml-auto flex p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                title="Collapse Sidebar"
+                aria-label="Collapse Sidebar"
+              >
+                <ChevronLeft size={18} />
+              </button>
+            </>
+          ) : (
             <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="ml-auto flex p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              title="Collapse Sidebar"
-              aria-label="Collapse Sidebar"
+              onClick={() => setIsSidebarOpen(true)}
+              className="group relative flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shrink-0"
+              title="Expand Sidebar"
+              aria-label="Expand Sidebar"
             >
-              <ChevronLeft size={18} />
+              <div className="group-hover:opacity-0 transition-opacity duration-150">
+                <JedanaLogo variant="mark" size={36} />
+              </div>
+              <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-primary/20 backdrop-blur-xs rounded-xl text-primary border border-primary/30 shadow-xs">
+                <ChevronRight size={18} />
+              </div>
             </button>
           )}
         </div>
@@ -171,6 +196,18 @@ export default function Sidebar() {
           <ThemeToggle isSidebarOpen={isSidebarOpen} />
         </div>
       </aside>
+
+      <ConfirmModal
+        isOpen={showResetSyncModal}
+        onClose={() => setShowResetSyncModal(false)}
+        onConfirm={handleConfirmResetSync}
+        isLoading={isResettingSync}
+        title="Force Sync Data"
+        description="This will clear local IndexedDB data and re-download your entire transaction history directly from the server. Are you sure you want to continue?"
+        variant="warning"
+        confirmLabel="Force Sync"
+        confirmIcon={RefreshCw}
+      />
     </>
   );
 }

@@ -1,1 +1,0 @@
-export { LogoutConfirmModal } from './LogoutConfirmModal';

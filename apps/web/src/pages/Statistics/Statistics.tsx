@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
 import { TransactionService } from '../../features/transactions/services/transaction.service';
 import { WalletService } from '../../features/wallets/services/wallet.service';
+import { exportTransactionsToCSV } from '../../features/transactions/services/export.service';
+import { TopPayees } from '../../features/transactions/components/TopPayees';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { cn } from '../../utils/cn';
-import { Filter, PieChart as PieIcon, BarChart3, Wand2 } from 'lucide-react';
+import { Filter, PieChart as PieIcon, BarChart3, Download } from 'lucide-react';
 import { usePreferences } from '../../context';
 import { getCycleRange } from '../../utils/dateCycle';
 
@@ -15,7 +17,8 @@ export default function Statistics() {
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('EXPENSE');
   const [walletFilter, setWalletFilter] = useState<string | 'ALL'>('ALL');
   
-  const wallets = WalletService.useWallets() || [];
+  const rawWallets = WalletService.useWallets();
+  const wallets = useMemo(() => rawWallets || [], [rawWallets]);
   
   // Calculate date boundaries
   const { startDate, endDate, rangeLabel } = useMemo(() => {
@@ -43,6 +46,27 @@ export default function Statistics() {
     });
   }, [rawTransactions, typeFilter, walletFilter, isMultiWalletEnabled]);
 
+
+  // Map wallet IDs to names for export
+  const walletMap = useMemo(() => {
+    const map = new Map<string, string>();
+    wallets.forEach(w => {
+      if (w.id) map.set(w.id, w.name);
+    });
+    return map;
+  }, [wallets]);
+
+  const handleExportCSV = () => {
+    let periodSuffix = 'all';
+    if (period === 'MONTH') {
+      periodSuffix = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    } else if (period === 'YEAR') {
+      periodSuffix = `${currentDate.getFullYear()}`;
+    }
+    const typeSuffix = typeFilter.toLowerCase();
+    const filename = `jedana-transactions-${periodSuffix}-${typeSuffix}.csv`;
+    exportTransactionsToCSV(validTransactions, { filename, walletMap });
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -118,48 +142,6 @@ export default function Statistics() {
     '#64748B', // Slate
   ];
 
-  const seedDummyData = async () => {
-    if (!confirm('This will generate hundreds of dummy data for 2025-2026. Continue?')) return;
-    const tagsExpense = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Gas'];
-    const tagsIncome = ['Salary', 'Bonus', 'Freelance', 'Investment'];
-    
-    for (let year = 2025; year <= 2026; year++) {
-      const maxMonth = year === 2026 ? 6 : 11;
-      for (let month = 0; month <= maxMonth; month++) {
-        const numExpenses = Math.floor(Math.random() * 10) + 5; // 5-15 pengeluaran per bulan
-        for (let i = 0; i < numExpenses; i++) {
-          const day = Math.floor(Math.random() * 28) + 1;
-          const date = new Date(year, month, day, 12, 0).getTime();
-          const amount = (Math.floor(Math.random() * 150) + 10) * 1000;
-          const tag = tagsExpense[Math.floor(Math.random() * tagsExpense.length)];
-          await TransactionService.addTransaction({
-            type: 'EXPENSE',
-            amount,
-            date,
-            note: `[DUMMY] ${tag}`,
-            tags: [tag]
-          });
-        }
-        
-        const numIncomes = Math.floor(Math.random() * 3) + 1; // 1-3 pemasukan per bulan
-        for (let i = 0; i < numIncomes; i++) {
-          const day = Math.floor(Math.random() * 28) + 1;
-          const date = new Date(year, month, day, 10, 0).getTime();
-          const amount = (Math.floor(Math.random() * 500) + 100) * 10000;
-          const tag = tagsIncome[Math.floor(Math.random() * tagsIncome.length)];
-          await TransactionService.addTransaction({
-            type: 'INCOME',
-            amount,
-            date,
-            note: `[DUMMY] ${tag}`,
-            tags: [tag]
-          });
-        }
-      }
-    }
-    alert('Done! Dummy data has been injected.');
-  };
-
   return (
     <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500 pb-6">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -167,13 +149,19 @@ export default function Statistics() {
           <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Financial Statistics</h2>
           <p className="text-muted-foreground text-xs sm:text-sm font-medium">Visual cash flow and expense breakdown</p>
         </div>
-        <button 
-          onClick={seedDummyData} 
-          className="flex items-center gap-2 px-3.5 py-2 bg-muted/80 hover:bg-muted text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground transition-all cursor-pointer border border-border/50"
-        >
-          <Wand2 size={14} />
-          Seed Mock Data
-        </button>
+        <div className="flex items-center flex-wrap gap-2">
+          {validTransactions.length > 0 && (
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] bg-primary/10 hover:bg-primary/20 text-xs font-semibold rounded-xl text-primary transition-all cursor-pointer border border-primary/20 active:scale-95 shadow-xs"
+              title="Export filtered transactions to CSV"
+            >
+              <Download size={15} />
+              <span>Export CSV</span>
+              <span className="font-mono font-tabular opacity-75">({validTransactions.length})</span>
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Filter Section (Bento Card) */}
@@ -365,6 +353,11 @@ export default function Statistics() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+          </div>
+
+          {/* Top Payees Ranking Section */}
+          <div className="col-span-1 lg:col-span-2">
+            <TopPayees transactions={validTransactions} typeFilter={typeFilter} />
           </div>
         </div>
       )}
