@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings, Repeat } from 'lucide-react';
 import ThemeToggle from '../../common/ThemeToggle';
+import { ConfirmModal } from '../../common/ConfirmModal';
 import { useAuth } from '../../../context';
 import { db } from '../../../db/db';
 
@@ -16,6 +17,8 @@ const navItems = [
 
 export default function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showResetSyncModal, setShowResetSyncModal] = useState(false);
+  const [isResettingSync, setIsResettingSync] = useState(false);
   const { user, isLoading, logout } = useAuth();
   const location = useLocation();
 
@@ -23,8 +26,13 @@ export default function Sidebar() {
     logout();
   };
 
-  const handleResetSync = async () => {
-    if (window.confirm("This will clear potentially corrupted local data and re-download your entire transaction history directly from the server. Continue?")) {
+  const handleResetSync = () => {
+    setShowResetSyncModal(true);
+  };
+
+  const handleConfirmResetSync = async () => {
+    setIsResettingSync(true);
+    try {
       // Wipe IndexedDB Data
       await Promise.all(db.tables.map(table => table.clear()));
       
@@ -33,6 +41,9 @@ export default function Sidebar() {
       
       // Force reload to trigger a fresh sync on boot without logging out
       window.location.reload();
+    } catch (err) {
+      console.error('Failed to reset sync:', err);
+      setIsResettingSync(false);
     }
   };
 
@@ -165,6 +176,18 @@ export default function Sidebar() {
           <ThemeToggle isSidebarOpen={isSidebarOpen} />
         </div>
       </aside>
+
+      <ConfirmModal
+        isOpen={showResetSyncModal}
+        onClose={() => setShowResetSyncModal(false)}
+        onConfirm={handleConfirmResetSync}
+        isLoading={isResettingSync}
+        title="Force Sync Data"
+        description="This will clear local IndexedDB data and re-download your entire transaction history directly from the server. Are you sure you want to continue?"
+        variant="warning"
+        confirmLabel="Force Sync"
+        confirmIcon={RefreshCw}
+      />
     </>
   );
 }

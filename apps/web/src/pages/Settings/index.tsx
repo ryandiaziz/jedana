@@ -1,21 +1,33 @@
+import { useState } from 'react';
 import { ApiKeyManager, McpInstructions, FinancialCycleSetting, DataBackupSetting } from '../../features/settings';
 import { useAuth } from '../../context';
 import { Settings as SettingsIcon, RefreshCw, LogOut, Loader2 } from 'lucide-react';
 import ThemeToggle from '../../components/common/ThemeToggle';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { db } from '../../db/db';
 
 export default function Settings() {
   const { user, isLoading, logout } = useAuth();
+  const [showResetSyncModal, setShowResetSyncModal] = useState(false);
+  const [isResettingSync, setIsResettingSync] = useState(false);
 
   const handleLogout = () => {
     logout();
   };
 
-  const handleResetSync = async () => {
-    if (window.confirm("This will clear potentially corrupted local data and re-download your entire transaction history directly from the server. Continue?")) {
+  const handleResetSync = () => {
+    setShowResetSyncModal(true);
+  };
+
+  const handleConfirmResetSync = async () => {
+    setIsResettingSync(true);
+    try {
       await Promise.all(db.tables.map(table => table.clear()));
       localStorage.removeItem('lastSyncTime');
       window.location.reload();
+    } catch (err) {
+      console.error('Failed to reset sync:', err);
+      setIsResettingSync(false);
     }
   };
 
@@ -146,6 +158,18 @@ export default function Settings() {
       <section className="p-5 sm:p-6 bg-card border border-border/80 rounded-2xl shadow-xs">
         <McpInstructions />
       </section>
+
+      <ConfirmModal
+        isOpen={showResetSyncModal}
+        onClose={() => setShowResetSyncModal(false)}
+        onConfirm={handleConfirmResetSync}
+        isLoading={isResettingSync}
+        title="Force Sync Data"
+        description="This will clear local IndexedDB data and re-download your entire transaction history directly from the server. Are you sure you want to continue?"
+        variant="warning"
+        confirmLabel="Force Sync"
+        confirmIcon={RefreshCw}
+      />
     </div>
   );
 }

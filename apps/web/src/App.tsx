@@ -12,6 +12,10 @@ import { RecurringService } from './features/recurring';
 
 import { AuthProvider } from './context';
 
+if (import.meta.env.DEV) {
+  import('./utils/devTools');
+}
+
 function App() {
   // Automatically scan and generate due recurring transactions on app boot
   useEffect(() => {

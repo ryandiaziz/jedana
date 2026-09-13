@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BudgetService, type TagBudgetProgress } from '../../services/budget.service';
 import BudgetCard from '../BudgetCard/BudgetCard';
 import BudgetForm from '../BudgetForm/BudgetForm';
+import { ConfirmModal } from '../../../../components/common/ConfirmModal';
 import { Target, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface BudgetOverviewProps {
@@ -13,6 +14,7 @@ interface BudgetOverviewProps {
 export default function BudgetOverview({ startDate, endDate, periodLabel }: BudgetOverviewProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState<TagBudgetProgress | undefined>(undefined);
+  const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null);
 
   const budgetSummary = BudgetService.useBudgetProgress(startDate, endDate);
   const { items, totalLimit, totalSpent, overBudgetCount, nearLimitCount } = budgetSummary;
@@ -22,10 +24,8 @@ export default function BudgetOverview({ startDate, endDate, periodLabel }: Budg
     setShowForm(true);
   };
 
-  const handleDelete = async (budgetId: string) => {
-    if (window.confirm('Delete this budget limit? Past transactions will remain unchanged.')) {
-      await BudgetService.deleteBudget(budgetId);
-    }
+  const handleDelete = (budgetId: string) => {
+    setDeletingBudgetId(budgetId);
   };
 
   const formatCurrency = (amount: number) => {
@@ -137,6 +137,22 @@ export default function BudgetOverview({ startDate, endDate, periodLabel }: Budg
           initialData={editingBudget}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deletingBudgetId}
+        onClose={() => setDeletingBudgetId(null)}
+        onConfirm={async () => {
+          if (deletingBudgetId) {
+            await BudgetService.deleteBudget(deletingBudgetId);
+            setDeletingBudgetId(null);
+          }
+        }}
+        title="Delete Budget Limit"
+        description="Are you sure you want to delete this budget limit? Past transactions will remain unchanged."
+        variant="danger"
+        confirmLabel="Delete Budget"
+      />
     </section>
   );
 }

@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
 import { RecurringService, RecurringCard, RecurringForm } from '../../features/recurring';
 import { type RecurringTransaction } from '@jedana/shared';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { Repeat, Plus, Play, CheckCircle2, ArrowDown, ArrowUp } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 export default function Recurring() {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<RecurringTransaction | undefined>(undefined);
+  const [deletingRuleId, setDeletingRuleId] = useState<string | null>(null);
   const [filterTab, setFilterTab] = useState<'ALL' | 'ACTIVE' | 'PAUSED'>('ALL');
   const [generatorNotice, setGeneratorNotice] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -64,10 +66,8 @@ export default function Recurring() {
     await RecurringService.toggleActive(id, !currentActive);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Delete this recurring rule? Previously generated transactions will remain in your history.')) {
-      await RecurringService.deleteRecurring(id);
-    }
+  const handleDelete = (id: string) => {
+    setDeletingRuleId(id);
   };
 
   const formatCurrency = (amount: number) => {
@@ -255,6 +255,22 @@ export default function Recurring() {
           initialData={editingItem}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deletingRuleId}
+        onClose={() => setDeletingRuleId(null)}
+        onConfirm={async () => {
+          if (deletingRuleId) {
+            await RecurringService.deleteRecurring(deletingRuleId);
+            setDeletingRuleId(null);
+          }
+        }}
+        title="Delete Recurring Rule"
+        description="Are you sure you want to delete this recurring rule? Previously generated transactions will remain in your history."
+        variant="danger"
+        confirmLabel="Delete Rule"
+      />
     </div>
   );
 }
