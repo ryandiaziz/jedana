@@ -9,6 +9,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Copy,
 } from 'lucide-react';
 import TransactionForm from '../../features/transactions/components/TransactionForm';
 import { TransactionService, type TransactionWithTags } from '../../features/transactions/services/transaction.service';
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
   const [selectedTx, setSelectedTx] = useState<TransactionWithTags | undefined>(undefined);
+  const [isDuplicate, setIsDuplicate] = useState(false);
   const monthInputRef = useRef<HTMLInputElement>(null);
 
   // Financial cycle start day from user setting
@@ -238,6 +240,7 @@ export default function Dashboard() {
         <button
           onClick={() => {
             setSelectedTx(undefined);
+            setIsDuplicate(false);
             setFormType('EXPENSE');
             setShowForm(true);
           }}
@@ -433,6 +436,7 @@ export default function Dashboard() {
                       key={tx.id}
                       onClick={() => {
                         setSelectedTx(tx);
+                        setIsDuplicate(false);
                         setShowForm(true);
                       }}
                       className="bg-card border border-border/70 p-3.5 md:p-4 rounded-2xl flex items-center justify-between hover:border-primary/40 hover:bg-muted/30 active:scale-[0.99] transition-all duration-150 ease-out group cursor-pointer shadow-xs min-h-[44px]"
@@ -483,14 +487,32 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </div>
-                      <div
-                        className={cn(
-                          "font-bold text-sm sm:text-base md:text-lg font-mono font-tabular whitespace-nowrap ml-3",
-                          tx.type === 'INCOME' ? "text-success" : "text-foreground"
-                        )}
-                      >
-                        {tx.type === 'INCOME' ? '+' : '-'}
-                        {formatCurrency(tx.amount)}
+                      
+                      <div className="flex items-center gap-1.5 sm:gap-2 ml-3 shrink-0">
+                        <div
+                          className={cn(
+                            "font-bold text-sm sm:text-base md:text-lg font-mono font-tabular whitespace-nowrap",
+                            tx.type === 'INCOME' ? "text-success" : "text-foreground"
+                          )}
+                        >
+                          {tx.type === 'INCOME' ? '+' : '-'}
+                          {formatCurrency(tx.amount)}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTx(tx);
+                            setIsDuplicate(true);
+                            setShowForm(true);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer opacity-70 sm:opacity-0 group-hover:opacity-100 active:scale-90"
+                          title="Duplicate Transaction"
+                          aria-label="Duplicate Transaction"
+                        >
+                          <Copy size={15} />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -548,6 +570,7 @@ export default function Dashboard() {
       <button
         onClick={() => {
           setSelectedTx(undefined);
+          setIsDuplicate(false);
           setFormType('EXPENSE');
           setShowForm(true);
         }}
@@ -563,9 +586,11 @@ export default function Dashboard() {
         <TransactionForm
           defaultType={formType}
           initialData={selectedTx}
+          isDuplicate={isDuplicate}
           onClose={() => {
             setShowForm(false);
             setSelectedTx(undefined);
+            setIsDuplicate(false);
           }}
         />
       )}

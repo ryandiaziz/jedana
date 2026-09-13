@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings } from 'lucide-react';
+import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings, Repeat } from 'lucide-react';
 import ThemeToggle from '../../common/ThemeToggle';
 import { useAuth } from '../../../context';
 import { db } from '../../../db/db';
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/statistics', icon: PieChart, label: 'Statistics' },
   { to: '/wallets', icon: Wallet, label: 'Wallets' },
+  { to: '/recurring', icon: Repeat, label: 'Recurring' },
   { to: '/tags', icon: TagsIcon, label: 'Tags' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];

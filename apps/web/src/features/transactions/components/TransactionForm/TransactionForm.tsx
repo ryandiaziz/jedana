@@ -11,9 +11,10 @@ interface TransactionFormProps {
   onClose: () => void;
   defaultType?: 'INCOME' | 'EXPENSE';
   initialData?: TransactionWithTags;
+  isDuplicate?: boolean;
 }
 
-export default function TransactionForm({ onClose, defaultType = 'EXPENSE', initialData }: TransactionFormProps) {
+export default function TransactionForm({ onClose, defaultType = 'EXPENSE', initialData, isDuplicate = false }: TransactionFormProps) {
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>(initialData?.type || defaultType);
   const [amount, setAmount] = useState(initialData ? String(initialData.amount) : '');
 
@@ -48,7 +49,9 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
     return d.toISOString().slice(0, 16);
   };
 
-  const [dateStr, setDateStr] = useState(() => toDatetimeLocal(initialData ? initialData.date : Date.now()));
+  const [dateStr, setDateStr] = useState(() =>
+    toDatetimeLocal(initialData && !isDuplicate ? initialData.date : Date.now())
+  );
   const [payee, setPayee] = useState(initialData?.payee || '');
   const [note, setNote] = useState(initialData?.note || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData ? initialData.tags.map(t => t.name) : []);
@@ -77,7 +80,7 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
         tags: selectedTags
       };
 
-      if (initialData?.id) {
+      if (initialData?.id && !isDuplicate) {
         await TransactionService.updateTransaction(initialData.id, data);
       } else {
         await TransactionService.addTransaction(data);
@@ -121,7 +124,13 @@ export default function TransactionForm({ onClose, defaultType = 'EXPENSE', init
 
         <div className="flex justify-between items-center px-5 py-3 border-b border-border/60">
           <h2 className="font-bold text-base sm:text-lg tracking-tight">
-            {initialData ? (initialData.isVoided ? 'Transaction Details (Voided)' : 'Edit Transaction') : 'New Transaction'}
+            {isDuplicate
+              ? 'Duplicate Transaction'
+              : initialData
+              ? initialData.isVoided
+                ? 'Transaction Details (Voided)'
+                : 'Edit Transaction'
+              : 'New Transaction'}
           </h2>
           <button 
             type="button"
