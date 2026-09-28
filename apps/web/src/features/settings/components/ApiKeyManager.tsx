@@ -30,7 +30,7 @@ export default function ApiKeyManager() {
       const data = await res.json();
       setKeys(data);
     } catch {
-      setError('Gagal memuat API keys');
+      setError('Failed to load API keys');
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +49,7 @@ export default function ApiKeyManager() {
         }
       } catch {
         if (!ignore) {
-          setError('Gagal memuat API keys');
+          setError('Failed to load API keys');
         }
       } finally {
         if (!ignore) {
@@ -90,7 +90,7 @@ export default function ApiKeyManager() {
       setShowCreateForm(false);
       fetchKeys();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal membuat API key');
+      setError(err instanceof Error ? err.message : 'Failed to create API key');
     } finally {
       setIsCreating(false);
     }
@@ -112,7 +112,7 @@ export default function ApiKeyManager() {
       fetchKeys();
       setRevokingKey(null);
     } catch {
-      setError('Gagal merevoke API key');
+      setError('Failed to revoke API key');
     } finally {
       setIsRevoking(false);
     }
@@ -125,7 +125,7 @@ export default function ApiKeyManager() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('id-ID', {
+    return new Date(dateStr).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -143,7 +143,7 @@ export default function ApiKeyManager() {
             API Keys
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Generate API key untuk menghubungkan AI agent ke Jedana via MCP.
+            Generate API keys to connect AI agents to Jedana via MCP.
           </p>
         </div>
         {!showCreateForm && (
@@ -152,7 +152,7 @@ export default function ApiKeyManager() {
             className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
           >
             <Plus size={16} />
-            Buat Key
+            Create Key
           </button>
         )}
       </div>
@@ -167,10 +167,10 @@ export default function ApiKeyManager() {
       {revealedKey && (
         <div className="px-4 py-4 bg-success/10 border border-success/30 rounded-lg space-y-3">
           <p className="text-sm font-semibold text-success">
-            ✓ API Key berhasil dibuat!
+            ✓ API Key generated successfully!
           </p>
           <p className="text-xs text-muted-foreground">
-            Salin key ini sekarang. Key tidak akan ditampilkan lagi setelah ditutup.
+            Copy this key now. It will not be shown again after closing.
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 px-3 py-2 bg-card border border-border rounded-md text-sm font-mono text-foreground break-all">
@@ -188,7 +188,7 @@ export default function ApiKeyManager() {
             onClick={() => setRevealedKey(null)}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
-            Tutup
+            Close
           </button>
         </div>
       )}
@@ -198,14 +198,14 @@ export default function ApiKeyManager() {
         <form onSubmit={handleCreate} className="flex items-end gap-3 p-4 bg-card border border-border rounded-lg">
           <div className="flex-1">
             <label htmlFor="api-key-name" className="block text-sm font-medium text-foreground mb-1.5">
-              Nama Key
+              Key Name
             </label>
             <input
               id="api-key-name"
               type="text"
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
-              placeholder="misal: Claude Desktop, Cursor"
+              placeholder="e.g., Claude Desktop, Cursor"
               className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               maxLength={100}
               autoFocus
@@ -223,7 +223,7 @@ export default function ApiKeyManager() {
             onClick={() => setShowCreateForm(false)}
             className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm font-medium hover:bg-accent transition-colors cursor-pointer"
           >
-            Batal
+            Cancel
           </button>
         </form>
       )}
@@ -232,11 +232,11 @@ export default function ApiKeyManager() {
       {isLoading ? (
         <div className="flex items-center justify-center py-8 text-muted-foreground">
           <Loader2 size={20} className="animate-spin mr-2" />
-          Memuat...
+          Loading...
         </div>
       ) : activeKeys.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground text-sm">
-          Belum ada API key. Buat key untuk mulai menggunakan MCP.
+          No API keys yet. Create a key to start using MCP.
         </div>
       ) : (
         <div className="space-y-2">
@@ -254,9 +254,9 @@ export default function ApiKeyManager() {
                   <p className="text-xs text-muted-foreground mt-0.5">
                     <code className="font-mono">{apiKey.keyPrefix}...</code>
                     {' · '}
-                    Dibuat {formatDate(apiKey.createdAt)}
+                    Created {formatDate(apiKey.createdAt)}
                     {apiKey.lastUsedAt && (
-                      <> · Terakhir dipakai {formatDate(apiKey.lastUsedAt)}</>
+                      <> · Last used {formatDate(apiKey.lastUsedAt)}</>
                     )}
                   </p>
                 </div>

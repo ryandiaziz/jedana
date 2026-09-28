@@ -70,13 +70,13 @@ export default function Settings() {
 
         <div className="px-5 py-8 bg-card border border-border/80 rounded-2xl text-center">
           <p className="text-sm text-muted-foreground">
-            Login terlebih dahulu untuk menyinkronkan data antar-perangkat dan mengakses fitur developer API / MCP.
+            Log in to synchronize data across devices and access developer API / MCP features.
           </p>
           <a
             href="/api/auth/google"
             className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-95 transition-all shadow-sm shadow-primary/25 cursor-pointer"
           >
-            Login via Google
+            Sign in with Google
           </a>
         </div>
       </div>

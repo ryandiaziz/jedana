@@ -26,10 +26,10 @@ export default function PreferencesManager() {
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
-              Preferensi Siklus & Dompet
+              Cycle & Wallet Preferences
             </h2>
             <p className="text-xs text-muted-foreground font-medium">
-              Atur awal perhitungan bulanan dan mode penggunaan dompet
+              Set monthly calculation start date and wallet management mode
             </p>
           </div>
         </div>
@@ -41,15 +41,15 @@ export default function PreferencesManager() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex flex-col gap-1">
               <label htmlFor="cycle-start-select" className="text-sm font-bold text-foreground flex items-center gap-2">
-                Awal Siklus Bulan (Tanggal Gajian)
+                Monthly Cycle Start (Payday Date)
               </label>
               <p className="text-xs text-muted-foreground">
-                Tentukan tanggal awal perhitungan transaksi dashboard dan statistik bulanan (1 – 28).
+                Specify the start date for monthly dashboard and statistical calculations (1 – 28).
               </p>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-semibold text-muted-foreground">Tanggal:</span>
+              <span className="text-xs font-semibold text-muted-foreground">Date:</span>
               <select
                 id="cycle-start-select"
                 value={startDayOfMonth}
@@ -58,7 +58,7 @@ export default function PreferencesManager() {
               >
                 {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
                   <option key={day} value={day}>
-                    {day} {day === 1 ? '(Awal Bulan Standar)' : ''}
+                    {day} {day === 1 ? '(Standard 1st of month)' : ''}
                   </option>
                 ))}
               </select>
@@ -70,15 +70,15 @@ export default function PreferencesManager() {
             <CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" />
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-foreground">
-                Preview Siklus Saat Ini ({currentCyclePreview.monthName}):
+                Current Cycle Preview ({currentCyclePreview.monthName}):
               </span>
               <span className="font-mono font-tabular text-primary font-bold text-xs sm:text-sm">
                 {currentCyclePreview.rangeLabel}
               </span>
               <span className="text-[11px] text-muted-foreground mt-0.5">
                 {startDayOfMonth === 1
-                  ? 'Perhitungan dimulai dari tanggal 1 hingga hari terakhir bulan.'
-                  : `Transaksi dihitung mulai tanggal ${startDayOfMonth} bulan sebelumnya sampai tanggal ${startDayOfMonth - 1} bulan ini.`}
+                  ? 'Calculations run from day 1 to the end of the month.'
+                  : `Transactions are calculated from day ${startDayOfMonth} of the previous month to day ${startDayOfMonth - 1} of this month.`}
               </span>
             </div>
           </div>
@@ -92,12 +92,12 @@ export default function PreferencesManager() {
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-sm font-bold text-foreground">
-                Mode Multi-Wallet
+                Multi-Wallet Mode
               </span>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xl">
                 {isMultiWalletEnabled
-                  ? 'Aktif. Anda dapat membuat beberapa dompet/amplop dan memilih dompet asal saat mencatat transaksi.'
-                  : 'Nonaktif (Mode Sederhana). Transaksi otomatis dicatat ke dompet utama tanpa perlu memilih dompet, menu dompet disembunyikan.'}
+                  ? 'Enabled. You can create multiple wallets/accounts and choose the source wallet when recording transactions.'
+                  : 'Disabled (Simple Mode). Transactions are automatically assigned to the main wallet without selection, and wallet navigation is hidden.'}
               </p>
             </div>
           </div>

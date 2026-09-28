@@ -29,9 +29,9 @@ export default function FinancialCycleSetting() {
   };
 
   const presets = [
-    { label: 'Tanggal 1 (Kalender Standar)', value: 1 },
-    { label: 'Tanggal 25 (Siklus Gajian)', value: 25 },
-    { label: 'Tanggal 28', value: 28 },
+    { label: '1st (Standard Calendar)', value: 1 },
+    { label: '25th (Payday Cycle)', value: 25 },
+    { label: '28th', value: 28 },
   ];
 
   return (
@@ -43,17 +43,17 @@ export default function FinancialCycleSetting() {
           </div>
           <div>
             <h2 className="text-sm md:text-base font-bold tracking-tight">
-              Awal Siklus Finansial (Awal Bulan Buku)
+              Financial Cycle Start (Accounting Month Start)
             </h2>
             <p className="text-xs text-muted-foreground">
-              Menentukan tanggal reset perhitungan ringkasan bulanan dan tracking budget.
+              Determines the reset date for monthly summary calculations and budget tracking.
             </p>
           </div>
         </div>
 
         {savedSuccess && (
           <span className="text-xs font-semibold text-success flex items-center gap-1 animate-in fade-in">
-            <Check size={14} /> Tersimpan
+            <Check size={14} /> Saved
           </span>
         )}
       </div>
@@ -79,7 +79,7 @@ export default function FinancialCycleSetting() {
 
       <div className="flex items-center gap-3 pt-1">
         <label className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
-          Pilih tanggal kustom (1 - 28):
+          Select custom date (1 - 28):
         </label>
         <input
           type="number"
@@ -92,16 +92,16 @@ export default function FinancialCycleSetting() {
           }}
           className="w-20 bg-background border border-border/80 rounded-xl px-3 py-2 text-sm font-mono font-bold text-center focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-xs"
         />
-        <span className="text-xs text-muted-foreground">setiap bulannya</span>
+        <span className="text-xs text-muted-foreground">each month</span>
       </div>
 
       <p className="text-[11px] text-muted-foreground bg-muted/40 p-2.5 rounded-xl border border-border/40">
         {startDay === 1 ? (
-          <>Perhitungan bulan berjalan dari tanggal <strong>1</strong> hingga akhir bulan kalender.</>
+          <>Current cycle calculates from the <strong>1st</strong> to the end of the calendar month.</>
         ) : (
           <>
-            Perhitungan bulan berjalan dari tanggal <strong>{startDay}</strong> bulan ini hingga tanggal{' '}
-            <strong>{startDay - 1}</strong> bulan berikutnya. Cocok untuk budgeting berbasis tanggal gajian.
+            Current cycle calculates from day <strong>{startDay}</strong> of this month to day{' '}
+            <strong>{startDay - 1}</strong> of the next month. Suitable for payday-based budgeting.
           </>
         )}
       </p>

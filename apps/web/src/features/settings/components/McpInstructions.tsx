@@ -18,7 +18,7 @@ const MCP_CONFIG_EXAMPLES = {
       null,
       2,
     ),
-    description: 'Tambahkan ke claude_desktop_config.json',
+    description: 'Add to claude_desktop_config.json',
   },
   cursor: {
     label: 'Cursor / VS Code',
@@ -37,7 +37,7 @@ const MCP_CONFIG_EXAMPLES = {
       null,
       2,
     ),
-    description: 'Tambahkan ke .cursor/mcp.json atau settings.json',
+    description: 'Add to .cursor/mcp.json or settings.json',
   },
 };
 
@@ -62,10 +62,10 @@ export default function McpInstructions() {
       <div>
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <BookOpen size={20} />
-          Cara Setup MCP
+          How to Set Up MCP
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Hubungkan AI agent kamu ke Jedana menggunakan konfigurasi di bawah ini.
+          Connect your AI agents to Jedana using the configuration below.
         </p>
       </div>
 
@@ -76,9 +76,9 @@ export default function McpInstructions() {
             1
           </span>
           <div>
-            <p className="text-sm font-medium text-foreground">Buat API Key</p>
+            <p className="text-sm font-medium text-foreground">Generate an API Key</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Klik "Buat Key" di atas dan salin key yang dihasilkan.
+              Click "Create Key" above and copy the generated key.
             </p>
           </div>
         </div>
@@ -88,9 +88,9 @@ export default function McpInstructions() {
             2
           </span>
           <div>
-            <p className="text-sm font-medium text-foreground">Tambahkan ke MCP Client</p>
+            <p className="text-sm font-medium text-foreground">Add to MCP Client</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Copy konfigurasi di bawah dan ganti <code className="font-mono bg-card px-1 rounded">jdn_YOUR_API_KEY_HERE</code> dengan API key kamu.
+              Copy the configuration below and replace <code className="font-mono bg-card px-1 rounded">jdn_YOUR_API_KEY_HERE</code> with your API key.
             </p>
           </div>
         </div>
@@ -100,9 +100,9 @@ export default function McpInstructions() {
             3
           </span>
           <div>
-            <p className="text-sm font-medium text-foreground">Mulai Gunakan</p>
+            <p className="text-sm font-medium text-foreground">Start Using</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Coba bilang ke AI: "Catat pengeluaran makan siang 50.000 di wallet harian"
+              Try prompting your AI: "Record lunch expense 50,000 from daily wallet"
             </p>
           </div>
         </div>
@@ -146,17 +146,17 @@ export default function McpInstructions() {
 
       {/* Available tools */}
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-3">Tools yang Tersedia</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-3">Available Tools</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {[
-            { name: 'create_transaction', desc: 'Catat transaksi baru' },
-            { name: 'list_transactions', desc: 'Lihat daftar transaksi' },
-            { name: 'void_transaction', desc: 'Batalkan transaksi' },
-            { name: 'list_wallets', desc: 'Lihat wallet & saldo' },
-            { name: 'create_wallet', desc: 'Buat wallet baru' },
-            { name: 'list_tags', desc: 'Lihat daftar tag' },
-            { name: 'create_tag', desc: 'Buat tag baru' },
-            { name: 'get_summary', desc: 'Ringkasan keuangan' },
+            { name: 'create_transaction', desc: 'Record a new transaction' },
+            { name: 'list_transactions', desc: 'View transaction list' },
+            { name: 'void_transaction', desc: 'Void a transaction' },
+            { name: 'list_wallets', desc: 'View wallets & balances' },
+            { name: 'create_wallet', desc: 'Create a new wallet' },
+            { name: 'list_tags', desc: 'View tag list' },
+            { name: 'create_tag', desc: 'Create a new tag' },
+            { name: 'get_summary', desc: 'Financial summary' },
           ].map((tool) => (
             <div
               key={tool.name}
