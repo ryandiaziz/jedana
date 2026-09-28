@@ -105,6 +105,8 @@
   }
 
   html {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
     scrollbar-gutter: stable;
