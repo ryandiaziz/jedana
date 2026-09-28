@@ -61,8 +61,10 @@ export function formatCycleDateRange(startTimestamp: number, endTimestamp: numbe
 
 /**
  * Calculates the cycle date boundaries based on target month and startDay (1-28).
- * If startDay === 1: 1st of month to end of month.
- * If startDay > 1 (e.g. 28): 28th of previous month to 27th of target month.
+ * - If startDay === 1: 1st of target month to end of target month (e.g. 1 Oct – 31 Oct 2026).
+ * - If startDay > 1 (e.g. 28): starts on startDay of previous month (e.g. 28 Sep 00:00:00)
+ *   and ends on (startDay - 1) of target month (e.g. 27 Oct 23:59:59.999).
+ *   Example: Target month October 2026 with startDay 28 -> "28 Sep – 27 Okt 2026"
  */
 export function getCycleRange(targetDate: Date, startDay: number = 1): CycleRange {
   const safeStartDay = Math.max(1, Math.min(28, Math.floor(startDay || 1)));
@@ -76,9 +78,9 @@ export function getCycleRange(targetDate: Date, startDay: number = 1): CycleRang
     start = new Date(year, month, 1, 0, 0, 0, 0);
     end = new Date(year, month + 1, 0, 23, 59, 59, 999);
   } else {
-    // Starts on safeStartDay of previous month (e.g. 28 Aug 00:00:00)
+    // Starts on safeStartDay of previous month (e.g. 28 Sep 00:00:00 for October)
     start = new Date(year, month - 1, safeStartDay, 0, 0, 0, 0);
-    // Ends on (safeStartDay - 1) of target month (e.g. 27 Sep 23:59:59.999)
+    // Ends on (safeStartDay - 1) of target month (e.g. 27 Oct 23:59:59.999 for October)
     end = new Date(year, month, safeStartDay - 1, 23, 59, 59, 999);
   }
 
@@ -98,83 +100,54 @@ export function getCycleRange(targetDate: Date, startDay: number = 1): CycleRang
   };
 }
 
+/**
+ * Resolves the reference anchor date (year/month) for the current active cycle based on reference date (today).
+ * If startDay === 1: returns the current month.
+ * If startDay > 1:
+ *   - If today.getDate() >= startDay: cycle belongs to next month (e.g. 28 Sep belongs to October 2026: 28 Sep - 27 Oct).
+ *   - If today.getDate() < startDay: cycle belongs to current month (e.g. 10 Sep belongs to September 2026: 28 Aug - 27 Sep).
+ */
+export function getCurrentCycleDate(today: Date = new Date(), startDay: number = 1): Date {
+  const safeStartDay = Math.max(1, Math.min(28, Math.floor(startDay || 1)));
+  if (safeStartDay === 1) {
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const date = today.getDate();
+
+  if (date >= safeStartDay) {
+    return new Date(year, month + 1, 1);
+  } else {
+    return new Date(year, month, 1);
+  }
+}
+
 export interface FinancialPeriod {
   startDate: number;      // Unix timestamp ms
   endDate: number;        // Unix timestamp ms
-  periodLabel: string;    // Display label, e.g. "September 2026" or "25 Aug - 24 Sep 2026"
+  periodLabel: string;    // Display label, e.g. "September 2026" or "28 Sep – 27 Okt 2026"
   monthInputKey: string;  // YYYY-MM for matching or stepper
   isCalendarMonth: boolean;
 }
 
 /**
  * Computes the financial period boundaries for a given reference date and startDay.
- * If startDay === 1: 1st 00:00:00 to last day of that month 23:59:59.999.
- * If startDay > 1:
- *   - If targetDate.getDate() < startDay:
- *       Starts on startDay of previous month, ends on (startDay - 1) of targetDate's month.
- *   - If targetDate.getDate() >= startDay:
- *       Starts on startDay of targetDate's month, ends on (startDay - 1) of next month.
+ * Uses the payday pattern anchored on startDay.
  */
 export function getFinancialPeriodRange(targetDate: Date, startDay: number = getFinancialMonthStartDay()): FinancialPeriod {
-  const year = targetDate.getFullYear();
-  const month = targetDate.getMonth();
-  const date = targetDate.getDate();
-
-  if (startDay <= 1) {
-    const start = new Date(year, month, 1, 0, 0, 0, 0).getTime();
-    const end = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
-    const monthName = targetDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const yyyy = year;
-    const mm = String(month + 1).padStart(2, '0');
-
-    return {
-      startDate: start,
-      endDate: end,
-      periodLabel: monthName,
-      monthInputKey: `${yyyy}-${mm}`,
-      isCalendarMonth: true,
-    };
-  }
-
-  // Custom cycle (e.g. 25th)
-  let periodStartYear: number;
-  let periodStartMonth: number;
-  let periodEndYear: number;
-  let periodEndMonth: number;
-
-  if (date < startDay) {
-    // We are in the period that started last month
-    const prevDate = new Date(year, month - 1, 1);
-    periodStartYear = prevDate.getFullYear();
-    periodStartMonth = prevDate.getMonth();
-    periodEndYear = year;
-    periodEndMonth = month;
-  } else {
-    // We are in the period that starts this month and ends next month
-    const nextDate = new Date(year, month + 1, 1);
-    periodStartYear = year;
-    periodStartMonth = month;
-    periodEndYear = nextDate.getFullYear();
-    periodEndMonth = nextDate.getMonth();
-  }
-
-  const startObj = new Date(periodStartYear, periodStartMonth, startDay, 0, 0, 0, 0);
-  const endObj = new Date(periodEndYear, periodEndMonth, startDay - 1, 23, 59, 59, 999);
-
-  const startFmt = startObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-  const endFmt = endObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-  const label = `${startFmt} – ${endFmt}`;
-
-  // Month input key represents the cycle anchor
-  const anchorYyyy = periodStartYear;
-  const anchorMm = String(periodStartMonth + 1).padStart(2, '0');
+  const safeStartDay = Math.max(1, Math.min(28, Math.floor(startDay || 1)));
+  const anchorDate = getCurrentCycleDate(targetDate, safeStartDay);
+  const cycle = getCycleRange(anchorDate, safeStartDay);
+  const isCalendar = safeStartDay === 1;
 
   return {
-    startDate: startObj.getTime(),
-    endDate: endObj.getTime(),
-    periodLabel: label,
-    monthInputKey: `${anchorYyyy}-${anchorMm}`,
-    isCalendarMonth: false,
+    startDate: cycle.startDate,
+    endDate: cycle.endDate,
+    periodLabel: isCalendar ? cycle.monthName : cycle.rangeLabel,
+    monthInputKey: cycle.monthInputValue,
+    isCalendarMonth: isCalendar,
   };
 }
 
@@ -182,13 +155,11 @@ export function getFinancialPeriodRange(targetDate: Date, startDay: number = get
  * Computes the immediately preceding period range for comparison calculations.
  */
 export function getPreviousPeriodRange(targetDate: Date, startDay: number = getFinancialMonthStartDay()): { startDate: number; endDate: number } {
-  if (startDay <= 1) {
-    const prevMonthDate = new Date(targetDate.getFullYear(), targetDate.getMonth() - 1, 1);
-    return getFinancialPeriodRange(prevMonthDate, 1);
-  }
-
-  // Shift reference date backwards by 1 cycle (roughly 30 days)
-  const current = getFinancialPeriodRange(targetDate, startDay);
-  const refDate = new Date(current.startDate - 86400000); // 1 day before period start
-  return getFinancialPeriodRange(refDate, startDay);
+  const safeStartDay = Math.max(1, Math.min(28, Math.floor(startDay || 1)));
+  const prevMonthDate = new Date(targetDate.getFullYear(), targetDate.getMonth() - 1, 1);
+  const prevCycle = getCycleRange(prevMonthDate, safeStartDay);
+  return {
+    startDate: prevCycle.startDate,
+    endDate: prevCycle.endDate,
+  };
 }

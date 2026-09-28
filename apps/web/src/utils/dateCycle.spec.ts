@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   getCycleRange,
+  getCurrentCycleDate,
   getFinancialMonthStartDay,
   setFinancialMonthStartDay,
   getFinancialPeriodRange,
@@ -33,7 +34,7 @@ describe('dateCycle utility', () => {
     };
   });
 
-  describe('getCycleRange (Master UI)', () => {
+  describe('getCycleRange', () => {
     it('handles standard 1st of month', () => {
       const target = new Date(2026, 8, 15); // Sep 15, 2026
       const range = getCycleRange(target, 1);
@@ -55,25 +56,45 @@ describe('dateCycle utility', () => {
       expect(range.monthName).toBe('September 2026');
     });
 
-    it('handles custom start day 28 for September (28 Aug - 27 Sep)', () => {
-      const target = new Date(2026, 8, 5); // Sep 5, 2026
+    it('handles custom start day 28 for October (28 Sep - 27 Oct)', () => {
+      const target = new Date(2026, 9, 1); // October 2026
       const range = getCycleRange(target, 28);
 
       const start = new Date(range.startDate);
       const end = new Date(range.endDate);
 
       expect(start.getFullYear()).toBe(2026);
-      expect(start.getMonth()).toBe(7); // August
+      expect(start.getMonth()).toBe(8); // September
       expect(start.getDate()).toBe(28);
       expect(start.getHours()).toBe(0);
 
       expect(end.getFullYear()).toBe(2026);
-      expect(end.getMonth()).toBe(8); // September
+      expect(end.getMonth()).toBe(9); // October
       expect(end.getDate()).toBe(27);
       expect(end.getHours()).toBe(23);
       expect(end.getMinutes()).toBe(59);
 
-      expect(range.monthName).toBe('September 2026');
+      expect(range.monthName).toBe('October 2026');
+      expect(range.rangeLabel).toBe('28 Sep – 27 Okt 2026');
+    });
+
+    it('handles custom start day 28 for November (28 Oct - 27 Nov)', () => {
+      const target = new Date(2026, 10, 1); // November 2026
+      const range = getCycleRange(target, 28);
+
+      const start = new Date(range.startDate);
+      const end = new Date(range.endDate);
+
+      expect(start.getFullYear()).toBe(2026);
+      expect(start.getMonth()).toBe(9); // October
+      expect(start.getDate()).toBe(28);
+
+      expect(end.getFullYear()).toBe(2026);
+      expect(end.getMonth()).toBe(10); // November
+      expect(end.getDate()).toBe(27);
+
+      expect(range.monthName).toBe('November 2026');
+      expect(range.rangeLabel).toBe('28 Okt – 27 Nov 2026');
     });
 
     it('handles January target month with start day 28 (wrapping to December of previous year)', () => {
@@ -92,24 +113,7 @@ describe('dateCycle utility', () => {
       expect(end.getDate()).toBe(27);
 
       expect(range.monthName).toBe('January 2026');
-    });
-
-    it('handles March target month with start day 28 (previous month February)', () => {
-      const target = new Date(2026, 2, 10); // Mar 10, 2026
-      const range = getCycleRange(target, 28);
-
-      const start = new Date(range.startDate);
-      const end = new Date(range.endDate);
-
-      expect(start.getFullYear()).toBe(2026);
-      expect(start.getMonth()).toBe(1); // February
-      expect(start.getDate()).toBe(28);
-
-      expect(end.getFullYear()).toBe(2026);
-      expect(end.getMonth()).toBe(2); // March
-      expect(end.getDate()).toBe(27);
-
-      expect(range.monthName).toBe('March 2026');
+      expect(range.rangeLabel).toBe('28 Des 2025 – 27 Jan 2026');
     });
 
     it('clamps values below 1 or above 28', () => {
@@ -119,6 +123,37 @@ describe('dateCycle utility', () => {
 
       const rangeOver = getCycleRange(target, 50);
       expect(new Date(rangeOver.startDate).getDate()).toBe(28);
+    });
+
+    it('getCurrentCycleDate correctly identifies active cycle', () => {
+      // 28 September 2026 (day of payday) -> starts October 2026 cycle (28 Sep - 27 Oct)
+      const onPayday = new Date(2026, 8, 28);
+      const anchorOn = getCurrentCycleDate(onPayday, 28);
+      expect(anchorOn.getMonth()).toBe(9); // October
+      expect(anchorOn.getFullYear()).toBe(2026);
+
+      // 27 September 2026 (day before payday) -> belongs to September 2026 cycle (28 Aug - 27 Sep)
+      const beforePayday = new Date(2026, 8, 27);
+      const anchorBefore = getCurrentCycleDate(beforePayday, 28);
+      expect(anchorBefore.getMonth()).toBe(8); // September
+      expect(anchorBefore.getFullYear()).toBe(2026);
+
+      // 5 October 2026 (before October payday) -> belongs to October 2026 cycle (28 Sep - 27 Oct)
+      const inCycle = new Date(2026, 9, 5);
+      const anchorIn = getCurrentCycleDate(inCycle, 28);
+      expect(anchorIn.getMonth()).toBe(9); // October
+      expect(anchorIn.getFullYear()).toBe(2026);
+
+      // 28 October 2026 -> starts November 2026 cycle (28 Oct - 27 Nov)
+      const octPayday = new Date(2026, 9, 28);
+      const anchorOct = getCurrentCycleDate(octPayday, 28);
+      expect(anchorOct.getMonth()).toBe(10); // November
+      expect(anchorOct.getFullYear()).toBe(2026);
+
+      // Standard calendar month (startDay === 1)
+      const standardDate = new Date(2026, 8, 15);
+      const anchorStandard = getCurrentCycleDate(standardDate, 1);
+      expect(anchorStandard.getMonth()).toBe(8); // September
     });
   });
 

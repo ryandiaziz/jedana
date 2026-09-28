@@ -7,12 +7,14 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { cn } from '../../utils/cn';
 import { Filter, PieChart as PieIcon, BarChart3, Download } from 'lucide-react';
 import { usePreferences } from '../../context';
-import { getCycleRange } from '../../utils/dateCycle';
+import { getCycleRange, getCurrentCycleDate } from '../../utils/dateCycle';
 
 export default function Statistics() {
   const { startDayOfMonth, isMultiWalletEnabled } = usePreferences();
   const [period, setPeriod] = useState<'MONTH' | 'YEAR' | 'ALL'>('MONTH');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(() =>
+    getCurrentCycleDate(new Date(), startDayOfMonth)
+  );
   
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('EXPENSE');
   const [walletFilter, setWalletFilter] = useState<string | 'ALL'>('ALL');

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Calendar, Wallet, CheckCircle2 } from 'lucide-react';
 import { usePreferences } from '../../../context';
-import { getCycleRange } from '../../../utils/dateCycle';
+import { getCycleRange, getCurrentCycleDate } from '../../../utils/dateCycle';
 
 export default function PreferencesManager() {
   const {
@@ -13,7 +13,8 @@ export default function PreferencesManager() {
 
   // Preview cycle for the current month
   const currentCyclePreview = useMemo(() => {
-    return getCycleRange(new Date(), startDayOfMonth);
+    const currentAnchor = getCurrentCycleDate(new Date(), startDayOfMonth);
+    return getCycleRange(currentAnchor, startDayOfMonth);
   }, [startDayOfMonth]);
 
   return (

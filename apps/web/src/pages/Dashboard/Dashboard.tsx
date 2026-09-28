@@ -18,6 +18,7 @@ import { SpendingAnomalyAlert } from '../../features/transactions/components/Spe
 import { BudgetOverview } from '../../features/budgets';
 import {
   getCycleRange,
+  getCurrentCycleDate,
   getPreviousPeriodRange,
 } from '../../utils/dateCycle';
 import { cn } from '../../utils/cn';
@@ -32,7 +33,9 @@ export default function Dashboard() {
   const monthInputRef = useRef<HTMLInputElement>(null);
 
   // State for Month Navigation
-  const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
+  const [currentMonthDate, setCurrentMonthDate] = useState(() =>
+    getCurrentCycleDate(new Date(), startDayOfMonth)
+  );
 
   const { startDate, endDate, monthName, monthInputValue, rangeLabel } = useMemo(() => {
     return getCycleRange(currentMonthDate, startDayOfMonth);
