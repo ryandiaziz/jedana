@@ -70,24 +70,27 @@ export default function BudgetCard({ item, onEdit, onDelete }: BudgetCardProps) 
             </span>
           )}
 
-          <button
-            type="button"
-            onClick={() => onEdit(item)}
-            className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 rounded-xl transition-all cursor-pointer"
-            title="Edit Budget"
-            aria-label={`Edit ${item.tagName} budget`}
-          >
-            <Edit2 size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(item.budgetId)}
-            className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 active:scale-90 rounded-xl transition-all cursor-pointer"
-            title="Delete Budget"
-            aria-label={`Delete ${item.tagName} budget`}
-          >
-            <Trash2 size={15} />
-          </button>
+          {/* Action buttons - shown on hover or focus for a cleaner look */}
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto focus-within:pointer-events-auto transition-opacity duration-200">
+            <button
+              type="button"
+              onClick={() => onEdit(item)}
+              className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 rounded-xl transition-all cursor-pointer"
+              title="Edit Budget"
+              aria-label={`Edit ${item.tagName} budget`}
+            >
+              <Edit2 size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(item.budgetId)}
+              className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 active:scale-90 rounded-xl transition-all cursor-pointer"
+              title="Delete Budget"
+              aria-label={`Delete ${item.tagName} budget`}
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
         </div>
       </div>
 
