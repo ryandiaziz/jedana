@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { X } from 'lucide-react';
 
 interface TagOption {
@@ -24,6 +24,7 @@ export function SmartTagsInput({
 }: SmartTagsInputProps) {
   const [tagSearch, setTagSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const filteredTags = useMemo(() => {
     if (!availableTags || availableTags.length === 0) return [];
@@ -31,19 +32,26 @@ export function SmartTagsInput({
     const activeSearch = tagSearch.toLowerCase();
     return availableTags
       .filter(t => !t.isArchived)
-      .filter(t => !selectedTags.includes(t.name))
+      .filter(t => !selectedTags.some(selected => selected.toLowerCase() === t.name.toLowerCase()))
       .filter(t => t.name.toLowerCase().includes(activeSearch) && t.name.toLowerCase() !== activeSearch)
       .slice(0, 5);
   }, [availableTags, tagSearch, selectedTags]);
 
+  const handleAddTag = (tagName: string) => {
+    const trimmed = tagName.trim();
+    if (!trimmed) return;
+    const exists = selectedTags.some(t => t.toLowerCase() === trimmed.toLowerCase());
+    if (!exists) {
+      onChange([...selectedTags, trimmed]);
+    }
+    setTagSearch('');
+    setIsOpen(false);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
-      const t = tagSearch.trim();
-      if (t && !selectedTags.includes(t)) {
-        onChange([...selectedTags, t]);
-        setTagSearch('');
-      }
+      handleAddTag(tagSearch);
     } else if (e.key === 'Backspace' && tagSearch === '' && selectedTags.length > 0) {
       onChange(selectedTags.slice(0, -1));
     }
@@ -53,7 +61,8 @@ export function SmartTagsInput({
     <div className="flex flex-col gap-1.5">
       <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{label}</label>
       <div 
-        className={`flex flex-wrap items-center gap-1.5 w-full bg-background border border-border rounded-md px-3 py-2 transition-colors ${
+        onClick={() => inputRef.current?.focus()}
+        className={`flex flex-wrap items-center gap-1.5 w-full bg-background border border-border rounded-md px-3 py-2 transition-colors cursor-text ${
           disabled ? 'opacity-50' : 'focus-within:border-primary'
         }`}
       >
@@ -63,8 +72,12 @@ export function SmartTagsInput({
             {!disabled && (
               <button 
                 type="button" 
-                onClick={() => onChange(selectedTags.filter(t => t !== tag))} 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange(selectedTags.filter(t => t !== tag));
+                }} 
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
+                aria-label={`Remove tag ${tag}`}
               >
                 <X size={12} />
               </button>
@@ -72,6 +85,7 @@ export function SmartTagsInput({
           </div>
         ))}
         <input
+          ref={inputRef}
           type="text"
           value={tagSearch}
           onChange={e => {
@@ -81,12 +95,9 @@ export function SmartTagsInput({
           onKeyDown={handleKeyDown}
           onFocus={() => setIsOpen(true)}
           onBlur={() => {
-            const t = tagSearch.trim();
-            if (t && !selectedTags.includes(t)) {
-              onChange([...selectedTags, t]);
-              setTagSearch('');
-            }
-            setTimeout(() => setIsOpen(false), 200);
+            setTimeout(() => {
+              setIsOpen(false);
+            }, 200);
           }}
           className="flex-1 bg-transparent border-none outline-none text-sm min-w-15"
           placeholder={selectedTags.length === 0 && !disabled ? "Type and press enter" : ""}
@@ -95,12 +106,14 @@ export function SmartTagsInput({
         {selectedTags.length > 0 && !disabled && (
           <button 
             type="button" 
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               onChange([]);
               setTagSearch('');
             }} 
             className="text-muted-foreground hover:text-foreground ml-auto cursor-pointer p-0.5 rounded hover:bg-muted"
             title="Clear all"
+            aria-label="Clear all tags"
           >
             <X size={16} />
           </button>
@@ -113,12 +126,10 @@ export function SmartTagsInput({
             <button
               key={tag.id || tag.name}
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onPointerDown={(e) => e.preventDefault()}
               onClick={() => {
-                if (!selectedTags.includes(tag.name)) {
-                  onChange([...selectedTags, tag.name]);
-                }
-                setTagSearch('');
-                setIsOpen(false);
+                handleAddTag(tag.name);
               }}
               className="bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary px-2 py-1 rounded-md text-xs transition-colors cursor-pointer"
             >

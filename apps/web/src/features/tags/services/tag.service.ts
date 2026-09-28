@@ -3,14 +3,14 @@ import { db, type Tag } from '../../../db/db';
 
 export const TagService = {
   /**
-   * Mengambil seluruh tag yang pernah dibuat oleh pengguna (master data).
+   * Fetch all tags created by the user (master data).
    */
   useAllTags(): Tag[] | undefined {
     return useLiveQuery(() => db.tags.orderBy('name').toArray());
   },
 
   /**
-   * Mengambil tag yang diurutkan berdasarkan seberapa sering digunakan.
+   * Fetch tags ordered by usage frequency.
    */
   useFrequentTags(): Tag[] | undefined {
     return useLiveQuery(async () => {
@@ -25,23 +25,59 @@ export const TagService = {
       return allTags.sort((a, b) => {
         const countA = counts[a.id!] || 0;
         const countB = counts[b.id!] || 0;
-        if (countB !== countA) return countB - countA; // Urutkan dari yang terbanyak
-        return a.name.localeCompare(b.name); // Jika sama, urutkan abjad
+        if (countB !== countA) return countB - countA; // Sort by highest frequency
+        return a.name.localeCompare(b.name); // Alphabetical fallback
       });
     });
   },
 
   /**
-   * Mengarsipkan tag agar tidak muncul di pilihan form transaksi
+   * Archive a tag so it does not appear in transaction form suggestions.
    */
   async archiveTag(id: string): Promise<void> {
     await db.tags.update(id, { isArchived: true, updatedAt: Date.now() });
   },
 
   /**
-   * Memulihkan tag dari arsip
+   * Restore a tag from the archive.
    */
   async restoreTag(id: string): Promise<void> {
     await db.tags.update(id, { isArchived: false, updatedAt: Date.now() });
+  },
+
+  /**
+   * Update tag name with case-insensitive duplicate validation.
+   */
+  async updateTagName(id: string, newName: string): Promise<{ success: boolean; error?: string }> {
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      return { success: false, error: 'Tag name cannot be empty' };
+    }
+
+    // Check if another tag already uses this name (case-insensitive)
+    const existing = await db.tags
+      .where('name')
+      .equalsIgnoreCase(trimmed)
+      .filter(t => t.id !== id)
+      .first();
+
+    if (existing) {
+      return { success: false, error: 'Tag name already in use, please choose another name' };
+    }
+
+    await db.tags.update(id, { name: trimmed, updatedAt: Date.now() });
+    return { success: true };
+  },
+
+  /**
+   * Permanently delete a tag, detach relations from all transactions,
+   * and clean up any budgets linked to this tag.
+   */
+  async deleteTag(id: string): Promise<void> {
+    await db.transaction('rw', [db.tags, db.transaction_tags, db.budgets], async () => {
+      await db.tags.delete(id);
+      await db.transaction_tags.where('tagId').equals(id).delete();
+      await db.budgets.where('tagId').equals(id).delete();
+    });
   }
 };
