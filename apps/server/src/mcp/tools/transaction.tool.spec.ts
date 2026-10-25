@@ -126,7 +126,9 @@ describe('TransactionTool', () => {
         ctx as any,
       );
       expect(res.isError).toBe(true);
-      expect(res.content[0].text).toContain('Transaksi tidak ditemukan atau sudah di-void');
+      expect(res.content[0].text).toContain(
+        'Transaksi tidak ditemukan atau sudah di-void',
+      );
     });
 
     it('returns isError when voidTransaction throws', async () => {

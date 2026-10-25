@@ -37,17 +37,19 @@ describe('ApiKeyService', () => {
   });
 
   it('validateKey returns the owning user', async () => {
-    pool.query.mockImplementation(async (sql: string) => {
+    pool.query.mockImplementation((sql: string) => {
       if (sql.includes('SELECT ak.id AS key_id')) {
-        return { rows: [{ key_id: 'k1', user_id: 'u1' }] };
+        return Promise.resolve({ rows: [{ key_id: 'k1', user_id: 'u1' }] });
       }
       if (sql.includes('UPDATE api_keys SET last_used_at')) {
-        return { rowCount: 1 };
+        return Promise.resolve({ rowCount: 1 });
       }
       if (sql.includes('SELECT id, email FROM users')) {
-        return { rows: [{ id: 'u1', email: 'user@example.com' }] };
+        return Promise.resolve({
+          rows: [{ id: 'u1', email: 'user@example.com' }],
+        });
       }
-      return { rows: [] };
+      return Promise.resolve({ rows: [] });
     });
 
     const user = await service.validateKey('jdn_validkey123');
@@ -61,17 +63,17 @@ describe('ApiKeyService', () => {
   });
 
   it('validateKey returns null if user record is not found', async () => {
-    pool.query.mockImplementation(async (sql: string) => {
+    pool.query.mockImplementation((sql: string) => {
       if (sql.includes('SELECT ak.id AS key_id')) {
-        return { rows: [{ key_id: 'k1', user_id: 'u1' }] };
+        return Promise.resolve({ rows: [{ key_id: 'k1', user_id: 'u1' }] });
       }
       if (sql.includes('UPDATE api_keys SET last_used_at')) {
-        return { rowCount: 1 };
+        return Promise.resolve({ rowCount: 1 });
       }
       if (sql.includes('SELECT id, email FROM users')) {
-        return { rows: [] };
+        return Promise.resolve({ rows: [] });
       }
-      return { rows: [] };
+      return Promise.resolve({ rows: [] });
     });
 
     const user = await service.validateKey('jdn_orphaned_key');
