@@ -6,6 +6,7 @@ import { ConfirmModal } from '../../common/ConfirmModal';
 import { JedanaLogo } from '../../common/Logo';
 import { useAuth, usePreferences } from '../../../context';
 import { db } from '../../../db/db';
+import { syncService } from '../../../features/sync/services/SyncService';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -45,7 +46,7 @@ export default function Sidebar() {
       await Promise.all(db.tables.map(table => table.clear()));
       
       // Wipe localStorage sync state
-      localStorage.removeItem('lastSyncTime');
+      syncService.reset();
       
       // Force reload to trigger a fresh sync on boot without logging out
       window.location.reload();

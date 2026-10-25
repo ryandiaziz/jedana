@@ -5,8 +5,11 @@ import {
   Body,
   Query,
   Req,
+  Res,
+  BadRequestException,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { SyncService } from './sync.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -27,10 +30,23 @@ export class SyncController {
   @Get('pull')
   async pull(
     @Req() req: { user: { id: string } },
-    @Query('lastSync') lastSync?: string,
+    @Res({ passthrough: true }) res: Response,
+    @Query('since') since?: string,
+    @Query('lastSync') legacyLastSync?: string,
   ): Promise<Record<string, Array<Record<string, unknown>>>> {
     const userId = req.user.id;
-    const dateParam = lastSync ? new Date(lastSync) : new Date(0);
-    return this.syncService.pull(userId, dateParam);
+    const raw = since ?? legacyLastSync;
+    let sinceDate = new Date(0);
+    if (raw) {
+      const parsed = new Date(raw);
+      if (Number.isNaN(parsed.getTime())) {
+        throw new BadRequestException('Invalid sync cursor');
+      }
+      sinceDate = parsed;
+    }
+
+    const { data, cursor } = await this.syncService.pull(userId, sinceDate);
+    res.setHeader('X-Sync-Cursor', cursor.toISOString());
+    return data;
   }
 }

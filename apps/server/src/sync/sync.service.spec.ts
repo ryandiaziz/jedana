@@ -19,7 +19,12 @@ describe('SyncService', () => {
     };
     mockPool = {
       connect: jest.fn().mockResolvedValue(mockClient),
-      query: jest.fn().mockResolvedValue({ rows: [] }),
+      query: jest.fn().mockImplementation((query: string) => {
+        if (typeof query === 'string' && query.includes('SELECT NOW()')) {
+          return Promise.resolve({ rows: [{ now: new Date() }] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
     };
 
     service = new SyncService(mockPool as unknown as Pool);
@@ -51,6 +56,9 @@ describe('SyncService', () => {
       ];
 
       mockPool.query.mockImplementation((query: string) => {
+        if (typeof query === 'string' && query.includes('SELECT NOW()')) {
+          return Promise.resolve({ rows: [{ now: new Date() }] });
+        }
         if (query.includes('FROM wallets')) {
           return Promise.resolve({ rows: mockWallets });
         }
@@ -58,8 +66,8 @@ describe('SyncService', () => {
       });
 
       const result = await service.pull('u1', new Date(0));
-      expect(result.wallets).toHaveLength(2);
-      expect(result.wallets[0]).toEqual({
+      expect(result.data.wallets).toHaveLength(2);
+      expect(result.data.wallets[0]).toEqual({
         id: 'w-canonical',
         userId: 'u1',
         name: 'Dana Harian',
@@ -67,7 +75,7 @@ describe('SyncService', () => {
         createdAt: new Date('2026-01-01').getTime(),
         updatedAt: new Date('2026-01-01').getTime(),
       });
-      expect(result.wallets[1]).toEqual({
+      expect(result.data.wallets[1]).toEqual({
         id: 'w-tombstone',
         userId: 'u1',
         name: 'Dana Harian',
@@ -91,6 +99,9 @@ describe('SyncService', () => {
       ];
 
       mockPool.query.mockImplementation((query: string) => {
+        if (typeof query === 'string' && query.includes('SELECT NOW()')) {
+          return Promise.resolve({ rows: [{ now: new Date() }] });
+        }
         if (query.includes('FROM budgets')) {
           return Promise.resolve({ rows: mockBudgets });
         }
@@ -98,8 +109,8 @@ describe('SyncService', () => {
       });
 
       const result = await service.pull('u1', new Date(0));
-      expect(result.budgets).toHaveLength(1);
-      expect(result.budgets[0]).toEqual({
+      expect(result.data.budgets).toHaveLength(1);
+      expect(result.data.budgets[0]).toEqual({
         id: 'b-1',
         userId: 'u1',
         tagId: 't-1',
@@ -132,6 +143,9 @@ describe('SyncService', () => {
       ];
 
       mockPool.query.mockImplementation((query: string) => {
+        if (typeof query === 'string' && query.includes('SELECT NOW()')) {
+          return Promise.resolve({ rows: [{ now: new Date() }] });
+        }
         if (query.includes('FROM recurring_transactions')) {
           return Promise.resolve({ rows: mockRecurring });
         }
@@ -139,8 +153,8 @@ describe('SyncService', () => {
       });
 
       const result = await service.pull('u1', new Date(0));
-      expect(result.recurring_transactions).toHaveLength(1);
-      expect(result.recurring_transactions[0]).toEqual({
+      expect(result.data.recurring_transactions).toHaveLength(1);
+      expect(result.data.recurring_transactions[0]).toEqual({
         id: 'rec-1',
         userId: 'u1',
         walletId: 'w-1',
@@ -157,6 +171,39 @@ describe('SyncService', () => {
         createdAt: new Date('2026-01-01').getTime(),
         updatedAt: new Date('2026-01-01').getTime(),
       });
+    });
+
+    it('should return a cursor Date where cursor.getTime() >= lastSync.getTime()', async () => {
+      const fixedNow = new Date('2026-02-01T12:00:00Z');
+      mockPool.query.mockImplementation((query: string) => {
+        if (typeof query === 'string' && query.includes('SELECT NOW()')) {
+          return Promise.resolve({ rows: [{ now: fixedNow }] });
+        }
+        return Promise.resolve({ rows: [] });
+      });
+
+      const lastSync = new Date('2026-01-01T00:00:00Z');
+      const result = await service.pull('u1', lastSync);
+
+      expect(result.cursor).toBeInstanceOf(Date);
+      expect(result.cursor.getTime()).toBeGreaterThanOrEqual(lastSync.getTime());
+      expect(result.cursor).toEqual(fixedNow);
+    });
+
+    it('should execute SELECT NOW() before any data queries', async () => {
+      const executedQueries: string[] = [];
+      mockPool.query.mockImplementation((query: string) => {
+        executedQueries.push(query);
+        if (typeof query === 'string' && query.includes('SELECT NOW()')) {
+          return Promise.resolve({ rows: [{ now: new Date() }] });
+        }
+        return Promise.resolve({ rows: [] });
+      });
+
+      await service.pull('u1', new Date(0));
+
+      expect(executedQueries.length).toBeGreaterThan(1);
+      expect(executedQueries[0]).toContain('SELECT NOW() AS now');
     });
   });
 

@@ -22,7 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .then(data => {
         setUser(data);
+        syncService.setAuthenticated(true);
         // Automatically sync data upon successful auth detection
+        syncService.start();
         syncService.syncAll();
       })
       .catch(() => setUser(null))
@@ -44,7 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // 1. Physically wipe all IndexedDB tables for privacy security (CONTEXT.md)
       await Promise.all(db.tables.map(table => table.clear()));
-      localStorage.removeItem('lastSyncTime');
+      syncService.stop();
+      syncService.reset();
 
       // 2. Clear server auth cookie
       await fetch('/api/auth/logout');
