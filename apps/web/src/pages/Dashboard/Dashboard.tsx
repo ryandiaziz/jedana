@@ -441,6 +441,7 @@ export default function Dashboard() {
                   {group.transactions.map((tx) => (
                     <div
                       key={tx.id}
+                      data-testid="transaction-item"
                       onClick={() => {
                         setSelectedTx(tx);
                         setIsDuplicate(false);
