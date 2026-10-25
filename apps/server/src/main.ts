@@ -12,9 +12,12 @@ async function bootstrap() {
     bodyParser: false,
   });
 
-  // Body parser with 50mb limit to handle large sync batch payloads
-  app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({ extended: true, limit: '50mb' }));
+  // Reject compressed request bodies (inflate: false -> HTTP 415 on any
+  // Content-Encoding other than identity). Jedana clients always send plain
+  // JSON; refusing compressed bodies keeps untrusted bytes away from Node's
+  // brotli/zlib decoders (CVE-2026-111497) and caps per-request memory.
+  app.use(json({ limit: '5mb', inflate: false }));
+  app.use(urlencoded({ extended: true, limit: '5mb', inflate: false }));
 
   // ── MCP Auth (level Express) ────────────────────────────────────────────
   // Transport MCP dari @rekog/mcp-nest melakukan self-mount route `/mcp`
