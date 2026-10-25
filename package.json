@@ -1,6 +1,9 @@
 {
   "name": "jedana-monorepo",
   "private": true,
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
