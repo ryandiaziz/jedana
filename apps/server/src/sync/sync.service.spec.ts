@@ -186,7 +186,9 @@ describe('SyncService', () => {
       const result = await service.pull('u1', lastSync);
 
       expect(result.cursor).toBeInstanceOf(Date);
-      expect(result.cursor.getTime()).toBeGreaterThanOrEqual(lastSync.getTime());
+      expect(result.cursor.getTime()).toBeGreaterThanOrEqual(
+        lastSync.getTime(),
+      );
       expect(result.cursor).toEqual(fixedNow);
     });
 

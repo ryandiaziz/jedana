@@ -334,7 +334,9 @@ export class SyncService {
   }> {
     // Cursor diambil SEBELUM query data: baris yang berubah selama kita membaca
     // akan punya updated_at > cursor dan tetap terkirim di pull berikutnya.
-    const cursorRes = await this.pool.query<{ now: Date }>('SELECT NOW() AS now');
+    const cursorRes = await this.pool.query<{ now: Date }>(
+      'SELECT NOW() AS now',
+    );
     const cursor = cursorRes.rows[0].now;
 
     const dateParam = lastSync || new Date(0);
