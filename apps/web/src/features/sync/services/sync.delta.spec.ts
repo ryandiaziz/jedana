@@ -87,10 +87,12 @@ describe('SyncEngine delta sync and cursors', () => {
       isDeleted: false,
     });
 
-    let pushPayload: Record<string, Array<{ id: string }>> | null = null;
+    const captured: { payload: Record<string, Array<{ id: string }>> | null } = {
+      payload: null,
+    };
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
       if (url === '/api/sync/push') {
-        pushPayload = JSON.parse(init?.body as string);
+        captured.payload = JSON.parse(init?.body as string);
         return { ok: true, json: async () => ({ success: true }) };
       }
       return { ok: false };
@@ -98,8 +100,8 @@ describe('SyncEngine delta sync and cursors', () => {
 
     await syncService.pushLocalChanges();
 
-    expect(pushPayload).not.toBeNull();
-    const walletIds = pushPayload?.wallets?.map(w => w.id);
+    expect(captured.payload).not.toBeNull();
+    const walletIds = captured.payload?.wallets?.map((w) => w.id);
     expect(walletIds).toContain('w-new');
     expect(walletIds).toContain('w-no-updated-at');
     expect(walletIds).not.toContain('w-old');
