@@ -61,3 +61,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 __pycache__/
 *.py[cod]
 docker-compose.override.yml
+
+# Local agent/planner artefacts
+.hermes/
+.agy-worktrees/
+
