@@ -78,4 +78,40 @@ test.describe.serial('Floating actions and back-to-top', () => {
     await page.waitForFunction(() => window.scrollY === 0, undefined, { timeout: 2000 });
     await expect(toTopBtn).toBeHidden();
   });
+
+  test('search action focuses the search input', async () => {
+    const floatingBar = page.getByTestId('floating-actions');
+    const searchBtn = floatingBar.getByRole('button', { name: 'Search transactions' });
+
+    await page.evaluate(() => window.scrollTo({ top: 400, behavior: 'instant' }));
+    await page.waitForFunction(() => Math.round(window.scrollY) === 400);
+
+    await expect(searchBtn).toBeVisible();
+    await searchBtn.click();
+
+    const searchInput = page.getByPlaceholder('Search notes, payees, tags, or amounts...');
+    await expect(searchInput).toBeFocused();
+  });
+
+  test('month switch keeps scroll position', async () => {
+    await page.evaluate(() => {
+      document.body.style.minHeight = '200vh';
+      window.scrollTo({ top: 400, behavior: 'instant' });
+    });
+    await page.waitForFunction(() => Math.round(window.scrollY) === 400);
+
+    const floatingBar = page.getByTestId('floating-actions');
+    const prevPeriodBtn = floatingBar.getByRole('button', { name: 'Previous Period' });
+    await expect(prevPeriodBtn).toBeVisible();
+
+    const periodHeading = page.locator('header h2').first();
+    const initialLabel = await periodHeading.textContent();
+    const scrollBefore = await page.evaluate(() => window.scrollY);
+
+    await prevPeriodBtn.click();
+
+    await expect(periodHeading).not.toHaveText(initialLabel ?? '');
+    const scrollAfter = await page.evaluate(() => window.scrollY);
+    expect(Math.abs(scrollAfter - scrollBefore)).toBeLessThanOrEqual(4);
+  });
 });

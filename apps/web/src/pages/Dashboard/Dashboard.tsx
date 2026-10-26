@@ -10,10 +10,15 @@ import {
   TrendingDown,
   Minus,
   Copy,
+  Search,
 } from 'lucide-react';
 import TransactionForm from '../../features/transactions/components/TransactionForm';
 import { TransactionService, type TransactionWithTags } from '../../features/transactions/services/transaction.service';
-import { TransactionSearch, type FilterCriteria } from '../../features/transactions/components/TransactionSearch';
+import {
+  TransactionSearch,
+  type FilterCriteria,
+  type TransactionSearchHandle,
+} from '../../features/transactions/components/TransactionSearch';
 import { SpendingAnomalyAlert } from '../../features/transactions/components/SpendingAnomalyAlert';
 import { BudgetOverview } from '../../features/budgets';
 import {
@@ -32,6 +37,7 @@ export default function Dashboard() {
   const [selectedTx, setSelectedTx] = useState<TransactionWithTags | undefined>(undefined);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const monthInputRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<TransactionSearchHandle>(null);
 
   // State for Month Navigation
   const [currentMonthDate, setCurrentMonthDate] = useState(() =>
@@ -64,6 +70,8 @@ export default function Dashboard() {
     setShowForm(true);
   }, []);
 
+  const focusSearch = useCallback(() => searchRef.current?.focusSearch(), []);
+
   const floatingActions = useMemo<FloatingAction[]>(
     () => [
       {
@@ -73,6 +81,12 @@ export default function Dashboard() {
         onSelect: openNewTransaction,
         primary: true,
         desktopOnly: true,
+      },
+      {
+        id: 'search',
+        label: 'Search transactions',
+        icon: <Search size={18} />,
+        onSelect: focusSearch,
       },
       {
         id: 'prev-period',
@@ -87,7 +101,7 @@ export default function Dashboard() {
         onSelect: handleNextMonth,
       },
     ],
-    [openNewTransaction, handlePrevMonth, handleNextMonth]
+    [openNewTransaction, focusSearch, handlePrevMonth, handleNextMonth]
   );
   useFloatingActions(floatingActions);
 
@@ -417,7 +431,7 @@ export default function Dashboard() {
 
         {/* Global Search & Filter Bar */}
         {validTransactions.length > 0 && (
-          <TransactionSearch transactions={validTransactions} onFiltered={handleFiltered} />
+          <TransactionSearch ref={searchRef} transactions={validTransactions} onFiltered={handleFiltered} />
         )}
 
         {!transactions ? (

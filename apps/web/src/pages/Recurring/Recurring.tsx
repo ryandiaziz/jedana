@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { RecurringService, RecurringCard, RecurringForm } from '../../features/recurring';
 import { type RecurringTransaction } from '@jedana/shared';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { Repeat, Plus, Play, CheckCircle2, ArrowDown, ArrowUp } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { useFloatingActions } from '../../components/layout/FloatingActions';
 
 export default function Recurring() {
   const [showForm, setShowForm] = useState(false);
@@ -12,6 +13,15 @@ export default function Recurring() {
   const [filterTab, setFilterTab] = useState<'ALL' | 'ACTIVE' | 'PAUSED'>('ALL');
   const [generatorNotice, setGeneratorNotice] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const openNewRule = useCallback(() => {
+    setEditingItem(undefined);
+    setShowForm(true);
+  }, []);
+
+  useFloatingActions(useMemo(() => [
+    { id: 'new-rule', label: 'New Rule', icon: <Plus size={18} />, onSelect: openNewRule, primary: true, desktopOnly: true },
+  ], [openNewRule]));
 
   const rawRules = RecurringService.useRecurringTransactions();
   const rules = useMemo(() => rawRules || [], [rawRules]);
@@ -108,10 +118,7 @@ export default function Recurring() {
 
           <button
             type="button"
-            onClick={() => {
-              setEditingItem(undefined);
-              setShowForm(true);
-            }}
+            onClick={openNewRule}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary/90 active:scale-95 transition-all cursor-pointer shadow-sm shadow-primary/25 min-h-[44px]"
           >
             <Plus size={16} />

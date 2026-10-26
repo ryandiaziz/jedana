@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { type TransactionWithTags } from '../../services/transaction.service';
 import { TagService } from '../../../tags/services/tag.service';
 import { Search, X, Filter, ChevronDown } from 'lucide-react';
@@ -12,12 +12,29 @@ export interface FilterCriteria {
   maxAmount?: number;
 }
 
+export interface TransactionSearchHandle {
+  focusSearch: () => void;
+}
+
 interface TransactionSearchProps {
   transactions: TransactionWithTags[];
   onFiltered: (filtered: TransactionWithTags[], criteria: FilterCriteria) => void;
 }
 
-export default function TransactionSearch({ transactions, onFiltered }: TransactionSearchProps) {
+const TransactionSearch = forwardRef<TransactionSearchHandle, TransactionSearchProps>(function TransactionSearch(
+  { transactions, onFiltered },
+  ref,
+) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  useImperativeHandle(ref, () => ({
+    focusSearch: () => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.scrollIntoView({ block: 'center', behavior: 'smooth', inline: 'nearest' });
+      el.focus({ preventScroll: true });
+    },
+  }), []);
+
   const [query, setQuery] = useState('');
   const [type, setType] = useState<'ALL' | 'EXPENSE' | 'INCOME'>('ALL');
   const [tagId, setTagId] = useState('');
@@ -105,6 +122,7 @@ export default function TransactionSearch({ transactions, onFiltered }: Transact
             className="absolute left-3.5 text-muted-foreground pointer-events-none transition-colors"
           />
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -278,4 +296,6 @@ export default function TransactionSearch({ transactions, onFiltered }: Transact
       )}
     </div>
   );
-}
+});
+
+export default TransactionSearch;
