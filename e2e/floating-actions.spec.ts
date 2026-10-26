@@ -1,5 +1,18 @@
 import { test, expect, type Page } from '@playwright/test';
 
+/** Waits until window.scrollY stops changing (smooth scrollIntoView can outlive the click). */
+async function settleScroll(page: Page, timeout = 2000): Promise<void> {
+  await page.waitForFunction(
+    () =>
+      new Promise<boolean>((resolve) => {
+        const start = window.scrollY;
+        setTimeout(() => resolve(Math.abs(window.scrollY - start) < 1), 150);
+      }),
+    undefined,
+    { timeout },
+  );
+}
+
 test.describe.serial('Floating actions and back-to-top', () => {
   let page: Page;
 
@@ -91,11 +104,19 @@ test.describe.serial('Floating actions and back-to-top', () => {
 
     const searchInput = page.getByPlaceholder('Search notes, payees, tags, or amounts...');
     await expect(searchInput).toBeFocused();
+    await settleScroll(page);
   });
 
   test('month switch keeps scroll position', async () => {
     await page.evaluate(() => {
+      (document.activeElement as HTMLElement | null)?.blur();
       document.body.style.minHeight = '200vh';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+    await page.waitForFunction(() => window.scrollY === 0);
+    await settleScroll(page);
+
+    await page.evaluate(() => {
       window.scrollTo({ top: 400, behavior: 'instant' });
     });
     await page.waitForFunction(() => Math.round(window.scrollY) === 400);
