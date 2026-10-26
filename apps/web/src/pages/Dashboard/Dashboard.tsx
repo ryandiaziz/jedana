@@ -23,6 +23,7 @@ import {
 } from '../../utils/dateCycle';
 import { cn } from '../../utils/cn';
 import { usePreferences } from '../../context';
+import { useFloatingActions, type FloatingAction } from '../../components/layout/FloatingActions';
 
 export default function Dashboard() {
   const { startDayOfMonth, isMultiWalletEnabled } = usePreferences();
@@ -48,13 +49,47 @@ export default function Dashboard() {
   const periodLabel = startDayOfMonth === 1 ? monthName : rangeLabel;
   const isCalendarMonth = startDayOfMonth === 1;
 
-  const handlePrevMonth = () => {
+  const handlePrevMonth = useCallback(() => {
     setCurrentMonthDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
+  }, []);
 
-  const handleNextMonth = () => {
+  const handleNextMonth = useCallback(() => {
     setCurrentMonthDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
+  }, []);
+
+  const openNewTransaction = useCallback(() => {
+    setSelectedTx(undefined);
+    setIsDuplicate(false);
+    setFormType('EXPENSE');
+    setShowForm(true);
+  }, []);
+
+  const floatingActions = useMemo<FloatingAction[]>(
+    () => [
+      {
+        id: 'new-transaction',
+        label: 'New Transaction',
+        icon: <Plus size={18} />,
+        onSelect: openNewTransaction,
+        primary: true,
+        desktopOnly: true,
+      },
+      {
+        id: 'prev-period',
+        label: 'Previous Period',
+        icon: <ChevronLeft size={18} />,
+        onSelect: handlePrevMonth,
+      },
+      {
+        id: 'next-period',
+        label: 'Next Period',
+        icon: <ChevronRight size={18} />,
+        onSelect: handleNextMonth,
+      },
+    ],
+    [openNewTransaction, handlePrevMonth, handleNextMonth]
+  );
+  useFloatingActions(floatingActions);
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.value) return;
@@ -242,12 +277,7 @@ export default function Dashboard() {
         </div>
 
         <button
-          onClick={() => {
-            setSelectedTx(undefined);
-            setIsDuplicate(false);
-            setFormType('EXPENSE');
-            setShowForm(true);
-          }}
+          onClick={openNewTransaction}
           className="hidden md:flex bg-primary text-primary-foreground items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-95 transition-all justify-center cursor-pointer shadow-sm shadow-primary/25 min-h-[44px]"
         >
           <Plus size={18} />
@@ -576,12 +606,7 @@ export default function Dashboard() {
 
       {/* Mobile Floating Action Button (FAB) */}
       <button
-        onClick={() => {
-          setSelectedTx(undefined);
-          setIsDuplicate(false);
-          setFormType('EXPENSE');
-          setShowForm(true);
-        }}
+        onClick={openNewTransaction}
         className="md:hidden fixed right-5 z-30 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-90 transition-all duration-200 cursor-pointer animate-tab-pop"
         style={{ bottom: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))' }}
         title="New Transaction"

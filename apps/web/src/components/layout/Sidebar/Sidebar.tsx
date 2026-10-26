@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, useLocation, Link } from 'react-router-dom';
 import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings, Repeat } from 'lucide-react';
 import ThemeToggle from '../../common/ThemeToggle';
@@ -24,6 +24,10 @@ export default function Sidebar() {
   const { user, isLoading, logout } = useAuth();
   const { isMultiWalletEnabled } = usePreferences();
   const location = useLocation();
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-w', isSidebarOpen ? '16rem' : '5rem');
+  }, [isSidebarOpen]);
 
   const filteredNavItems = navItems.filter(item => {
     if (item.to === '/wallets' && !isMultiWalletEnabled) return false;
