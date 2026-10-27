@@ -1,10 +1,22 @@
-import { useState, type SubmitEvent } from 'react';
+import { useState, useRef, useCallback, useMemo, type SubmitEvent } from 'react';
 import { WalletService } from '../../features/wallets/services/wallet.service';
 import { Wallet as WalletIcon, Plus } from 'lucide-react';
+import { useFloatingActions } from '../../components/layout/FloatingActions';
 
 export default function Wallets() {
   const wallets = WalletService.useWallets();
   const [newWalletName, setNewWalletName] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const formCardRef = useRef<HTMLDivElement>(null);
+
+  const focusNewWallet = useCallback(() => {
+    formCardRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    window.setTimeout(() => nameInputRef.current?.focus({ preventScroll: true }), 250);
+  }, []);
+
+  useFloatingActions(useMemo(() => [
+    { id: 'new-wallet', label: 'New Wallet', icon: <Plus size={18} />, onSelect: focusNewWallet, primary: true, desktopOnly: true },
+  ], [focusNewWallet]));
 
   const handleAddWallet = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -26,10 +38,11 @@ export default function Wallets() {
       </header>
 
       {/* Add Wallet Card */}
-      <div className="bg-card border border-border/80 p-5 sm:p-6 rounded-2xl shadow-xs flex flex-col gap-3">
+      <div ref={formCardRef} className="bg-card border border-border/80 p-5 sm:p-6 rounded-2xl shadow-xs flex flex-col gap-3">
         <h3 className="font-bold text-base tracking-tight">Create New Wallet</h3>
         <form onSubmit={handleAddWallet} className="flex flex-col sm:flex-row gap-3">
           <input
+            ref={nameInputRef}
             type="text"
             value={newWalletName}
             onChange={(e) => setNewWalletName(e.target.value)}

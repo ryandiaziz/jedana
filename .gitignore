@@ -22,6 +22,8 @@ lerna-debug.log*
 # Tests
 coverage
 .nyc_output
+playwright-report/
+test-results/
 
 # Runtime & Temp data
 .temp
@@ -58,3 +60,9 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .agents/skills/
 __pycache__/
 *.py[cod]
+docker-compose.override.yml
+
+# Local agent/planner artefacts
+.hermes/
+.agy-worktrees/
+

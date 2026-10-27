@@ -328,7 +328,17 @@ export class SyncService {
   async pull(
     userId: string,
     lastSync: Date,
-  ): Promise<Record<string, Array<Record<string, unknown>>>> {
+  ): Promise<{
+    data: Record<string, Array<Record<string, unknown>>>;
+    cursor: Date;
+  }> {
+    // Cursor diambil SEBELUM query data: baris yang berubah selama kita membaca
+    // akan punya updated_at > cursor dan tetap terkirim di pull berikutnya.
+    const cursorRes = await this.pool.query<{ now: Date }>(
+      'SELECT NOW() AS now',
+    );
+    const cursor = cursorRes.rows[0].now;
+
     const dateParam = lastSync || new Date(0);
     const result: Record<string, Array<Record<string, unknown>>> = {};
 
@@ -371,6 +381,6 @@ export class SyncService {
       result[key] = res.rows.map(mapToCamelCase);
     }
 
-    return result;
+    return { data: result, cursor };
   }
 }

@@ -10,10 +10,15 @@ import {
   TrendingDown,
   Minus,
   Copy,
+  Search,
 } from 'lucide-react';
 import TransactionForm from '../../features/transactions/components/TransactionForm';
 import { TransactionService, type TransactionWithTags } from '../../features/transactions/services/transaction.service';
-import { TransactionSearch, type FilterCriteria } from '../../features/transactions/components/TransactionSearch';
+import {
+  TransactionSearch,
+  type FilterCriteria,
+  type TransactionSearchHandle,
+} from '../../features/transactions/components/TransactionSearch';
 import { SpendingAnomalyAlert } from '../../features/transactions/components/SpendingAnomalyAlert';
 import { BudgetOverview } from '../../features/budgets';
 import {
@@ -23,6 +28,7 @@ import {
 } from '../../utils/dateCycle';
 import { cn } from '../../utils/cn';
 import { usePreferences } from '../../context';
+import { useFloatingActions, type FloatingAction } from '../../components/layout/FloatingActions';
 
 export default function Dashboard() {
   const { startDayOfMonth, isMultiWalletEnabled } = usePreferences();
@@ -31,6 +37,7 @@ export default function Dashboard() {
   const [selectedTx, setSelectedTx] = useState<TransactionWithTags | undefined>(undefined);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const monthInputRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<TransactionSearchHandle>(null);
 
   // State for Month Navigation
   const [currentMonthDate, setCurrentMonthDate] = useState(() =>
@@ -48,13 +55,22 @@ export default function Dashboard() {
   const periodLabel = startDayOfMonth === 1 ? monthName : rangeLabel;
   const isCalendarMonth = startDayOfMonth === 1;
 
-  const handlePrevMonth = () => {
+  const handlePrevMonth = useCallback(() => {
     setCurrentMonthDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
+  }, []);
 
-  const handleNextMonth = () => {
+  const handleNextMonth = useCallback(() => {
     setCurrentMonthDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
+  }, []);
+
+  const openNewTransaction = useCallback(() => {
+    setSelectedTx(undefined);
+    setIsDuplicate(false);
+    setFormType('EXPENSE');
+    setShowForm(true);
+  }, []);
+
+  const focusSearch = useCallback(() => searchRef.current?.focusSearch(), []);
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.value) return;
@@ -66,6 +82,59 @@ export default function Dashboard() {
   const transactions = TransactionService.useRecentTransactions(startDate, endDate);
   const validTransactions = useMemo(() => transactions?.filter((t) => !t.isVoided) || [], [transactions]);
   const voidedTransactions = useMemo(() => transactions?.filter((t) => t.isVoided) || [], [transactions]);
+  const hasValidTransactions = validTransactions.length > 0;
+
+  const floatingActions = useMemo<FloatingAction[]>(
+    () => [
+      ...(hasValidTransactions
+        ? [
+            {
+              id: 'search',
+              label: 'Search transactions',
+              icon: <Search size={18} />,
+              onSelect: focusSearch,
+            },
+          ]
+        : []),
+      {
+        id: 'new-transaction',
+        label: 'New Transaction',
+        icon: <Plus size={18} />,
+        onSelect: openNewTransaction,
+        primary: true,
+        desktopOnly: true,
+      },
+    ],
+    [openNewTransaction, hasValidTransactions, focusSearch]
+  );
+
+  const floatingLeading = useMemo(
+    () => (
+      <div className="inline-flex items-center gap-0.5 bg-card/80 border border-border/80 rounded-2xl px-1 shadow-xs">
+        <button
+          type="button"
+          onClick={handlePrevMonth}
+          aria-label="Previous Period"
+          title="Previous Period"
+          className="w-9 h-9 min-w-[36px] flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-all cursor-pointer"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <span className="text-sm font-bold tracking-tight whitespace-nowrap px-1 font-tabular">{periodLabel}</span>
+        <button
+          type="button"
+          onClick={handleNextMonth}
+          aria-label="Next Period"
+          title="Next Period"
+          className="w-9 h-9 min-w-[36px] flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-all cursor-pointer"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+    ),
+    [periodLabel, handlePrevMonth, handleNextMonth]
+  );
+  useFloatingActions(floatingActions, { leading: floatingLeading });
 
   // Summaries: current vs previous period
   const { income, expense, net } = TransactionService.useSummary(startDate, endDate);
@@ -242,12 +311,7 @@ export default function Dashboard() {
         </div>
 
         <button
-          onClick={() => {
-            setSelectedTx(undefined);
-            setIsDuplicate(false);
-            setFormType('EXPENSE');
-            setShowForm(true);
-          }}
+          onClick={openNewTransaction}
           className="hidden md:flex bg-primary text-primary-foreground items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-95 transition-all justify-center cursor-pointer shadow-sm shadow-primary/25 min-h-[44px]"
         >
           <Plus size={18} />
@@ -387,7 +451,7 @@ export default function Dashboard() {
 
         {/* Global Search & Filter Bar */}
         {validTransactions.length > 0 && (
-          <TransactionSearch transactions={validTransactions} onFiltered={handleFiltered} />
+          <TransactionSearch ref={searchRef} transactions={validTransactions} onFiltered={handleFiltered} />
         )}
 
         {!transactions ? (
@@ -441,6 +505,7 @@ export default function Dashboard() {
                   {group.transactions.map((tx) => (
                     <div
                       key={tx.id}
+                      data-testid="transaction-item"
                       onClick={() => {
                         setSelectedTx(tx);
                         setIsDuplicate(false);
@@ -575,12 +640,7 @@ export default function Dashboard() {
 
       {/* Mobile Floating Action Button (FAB) */}
       <button
-        onClick={() => {
-          setSelectedTx(undefined);
-          setIsDuplicate(false);
-          setFormType('EXPENSE');
-          setShowForm(true);
-        }}
+        onClick={openNewTransaction}
         className="md:hidden fixed right-5 z-30 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-90 transition-all duration-200 cursor-pointer animate-tab-pop"
         style={{ bottom: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))' }}
         title="New Transaction"

@@ -1,5 +1,5 @@
 # Stage 1: Build React static assets
-FROM node:20-alpine AS builder
+FROM node:24.22.1-alpine AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ RUN npm run build --workspace=@jedana/shared
 RUN npm run build --workspace=apps/web
 
 # Stage 2: Serve static files via Nginx
-FROM nginx:alpine AS runner
+FROM nginx:1.29-alpine AS runner
 
 # Copy built static files to Nginx html directory
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html

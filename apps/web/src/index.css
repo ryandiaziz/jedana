@@ -32,6 +32,13 @@
   --radius-lg: 0.75rem;
   --radius-md: calc(var(--radius-lg) - 2px);
   --radius-sm: calc(var(--radius-md) - 2px);
+  --sidebar-w: 16rem;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --sidebar-w: 0rem;
+  }
 }
 
 .dark {
@@ -203,6 +210,12 @@
   input[type="month"]::-webkit-calendar-picker-indicator:hover {
     opacity: 1;
     background-color: var(--color-muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 

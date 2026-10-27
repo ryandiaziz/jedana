@@ -24,7 +24,7 @@ Follow these steps to set up and run the application in a local development envi
 ### 1. Prerequisites
 
 Before starting, ensure your system has the following installed:
-- **Node.js**: `v18.0.0` or higher (v20 LTS recommended)
+- **Node.js**: `v24.22.1` or higher (patched LTS; v20 and v24 < 24.22.1 are affected by CVE-2026-111497)
 - **NPM**: `v9.0.0` or higher
 - **PostgreSQL**: `v14.0` or higher (running locally or via Docker)
 

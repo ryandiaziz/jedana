@@ -5,6 +5,7 @@ import { Settings as SettingsIcon, RefreshCw, LogOut, Loader2 } from 'lucide-rea
 import ThemeToggle from '../../components/common/ThemeToggle';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { db } from '../../db/db';
+import { syncService } from '../../features/sync/services/SyncService';
 
 export default function Settings() {
   const { user, isLoading, logout } = useAuth();
@@ -23,7 +24,7 @@ export default function Settings() {
     setIsResettingSync(true);
     try {
       await Promise.all(db.tables.map(table => table.clear()));
-      localStorage.removeItem('lastSyncTime');
+      syncService.reset();
       window.location.reload();
     } catch (err) {
       console.error('Failed to reset sync:', err);

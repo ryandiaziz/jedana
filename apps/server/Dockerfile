@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:24.22.1-alpine AS builder
 
 WORKDIR /app
 
@@ -20,11 +20,13 @@ RUN npm run build --workspace=@jedana/shared
 RUN npm run build --workspace=apps/server
 
 # Stage 2: Production Runner
-FROM node:20-alpine AS runner
+FROM node:24.22.1-alpine AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV HOME=/home/node
+ENV npm_config_cache=/tmp/.npm
 
 # Copy built artifacts and node_modules
 COPY --from=builder /app/package.json ./package.json
@@ -33,6 +35,10 @@ COPY --from=builder /app/packages/shared ./packages/shared
 COPY --from=builder /app/apps/server/package.json ./apps/server/package.json
 COPY --from=builder /app/apps/server/dist ./apps/server/dist
 COPY --from=builder /app/apps/server/migrations ./apps/server/migrations
+
+RUN chown -R node:node /app
+
+USER node
 
 EXPOSE 3000
 

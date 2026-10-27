@@ -15,11 +15,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '24.22.1'
           cache: 'npm'
+
+      - name: Assert patched Node runtime
+        run: |
+          node -e "const [maj,min]=process.versions.node.split('.').map(Number); if (maj !== 24 || min < 22) { console.error('Node ' + process.versions.node + ' is below the patched 24.22.x line (CVE-2026-111497)'); process.exit(1); }"
 
       - name: Install Monorepo Dependencies
         run: npm ci

@@ -1,0 +1,51 @@
+name: CI Verify (push & PR)
+
+on:
+  push:
+    branches: [development, master]
+  pull_request:
+    branches: [development, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24.22.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+          cache: 'npm'
+
+      - name: Assert patched Node runtime
+        run: |
+          node -e "const [maj,min]=process.versions.node.split('.').map(Number); if (maj !== 24 || min < 22) { console.error('Node ' + process.versions.node + ' is below the patched 24.22.x line (CVE-2026-111497)'); process.exit(1); }"
+
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      - name: Build (shared -> server -> web)
+        run: npm run build
+
+      - name: Unit Tests (server + web)
+        run: npm test
+
+      - name: Lint Web
+        run: npm run lint --prefix apps/web
+
+      - name: Lint Server
+        working-directory: apps/server
+        run: npx eslint "src/**/*.ts"
+
+      - name: Dependency Audit (blocking)
+        run: npm audit --audit-level=high
