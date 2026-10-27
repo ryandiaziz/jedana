@@ -1,61 +1,73 @@
-# ADR-0009: Header keamanan dikirim dari origin (nginx), bukan hanya mengandalkan Cloudflare
+# ADR-0009: Header keamanan dokumen HTML dikirim nginx host (satu sumber), helmet tetap untuk API
 
 **Tanggal:** 2026-10-27 · **Status:** diusulkan
 
 ## Konteks
 
-- TLS diterminasi di Cloudflare (keputusan Ryan, 27 Okt 2026), tetapi origin tetap bisa diakses
-  langsung lewat IP VPS pada port 80 — dan pada jalur itu **tidak ada header keamanan sama sekali**.
-- `nginx.conf` hanya 48 baris: `listen 80`, `gzip`, SPA fallback, proxy `/api/` dan `/mcp`. Tidak ada
-  `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`/`frame-ancestors`,
-  `Referrer-Policy`, maupun `Content-Security-Policy`.
-- `helmet()` aktif untuk respons API (`apps/server/src/main.ts:37`), tetapi **dokumen HTML** dilayani
-  nginx (bukan Express), jadi ketujuh header helmet tidak berlaku untuk halaman aplikasi.
-- `apps/web/index.html` memuat satu `<script>` inline (inisialisasi tema pra-paint) dan satu `<style>`
-  inline, serta memuat font dari `fonts.googleapis.com` / `fonts.gstatic.com`. CSP karena itu harus
-  mengizinkannya secara eksplisit — kalau tidak, tema akan berkedip (FOUC) atau font gagal dimuat.
+Bukti produksi, diambil 27 Okt 2026 05:49 UTC dengan `curl -D -` ke `https://jedana.my.id`:
+
+| Permintaan | Header keamanan yang terlihat |
+|---|---|
+| `GET /` (dokumen HTML) | **tidak ada sama sekali** — hanya `Server`, `Date`, `Content-Type`, `Content-Length`, `Last-Modified`, `ETag`, `Accept-Ranges` |
+| `GET /api/health` | `Content-Security-Policy` (default helmet), `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, `Origin-Agent-Cluster` |
+| `POST /mcp` (tanpa key → 401) | **tidak ada header helmet sama sekali**, dan `X-Powered-By: Express` bocor |
+
+Penyebabnya terbaca di repo:
+
+- `helmet()` dipasang di `apps/server/src/main.ts:37`, sedangkan middleware MCP dipasang lebih dulu di
+  `main.ts:32`. Request yang berhenti di 401 (MCP) tidak pernah melewati helmet, dan `X-Powered-By` tidak
+  dihapus.
+- Dokumen HTML tidak dilayani Express, jadi helmet **tidak akan pernah** menyentuhnya — harus dari nginx.
+- HSTS dari helmet hanya menempel pada respons API. HSTS berlaku per-host setelah diterima browser, jadi
+  perilakunya bergantung pada apakah browser kebetulan memanggil `/api` lebih dulu — tidak deterministik.
+- `apps/web/index.html:13-38` memuat script tema inline; baris 39-56 style inline; font dimuat dari
+  `fonts.googleapis.com` / `fonts.gstatic.com`.
 
 ## Pilihan yang dipertimbangkan
 
-1. **Andalkan Cloudflare saja.** Nol perubahan repo, tetapi semua proteksi hilang pada jalur langsung
-   ke IP, dan konfigurasi keamanan tidak terlihat di repositori (tidak bisa ditinjau/diuji).
-2. **CSP ketat tanpa `unsafe-inline`.** Paling aman, tetapi menuntut refactor: memindahkan script tema
-   inline ke file eksternal justru mengembalikan FOUC yang sebelumnya diperbaiki dengan sengaja.
-3. **Header di origin dengan CSP berbasis hash untuk script inline** + `style-src 'unsafe-inline'`.
-   Script inline punya isi yang stabil (tidak berubah per build), sehingga hash `sha256` bisa
-   dihitung sekali dan diuji; gaya inline (atribut `style` dari React/Tailwind) tetap butuh
-   `unsafe-inline` karena jumlahnya banyak dan dinamis.
+1. **Andalkan helmet saja.** Tidak mungkin: HTML tidak melewati Express (bukti di tabel).
+2. **Header di nginx container (`nginx.conf` di repo) saja.** Semua respons HTML lewat container nginx,
+   jadi berfungsi dan bisa ditinjau; tetapi hop TLS ada di nginx host, sehingga HSTS berasal dari komponen
+   yang tidak memegang sertifikat — membingungkan saat audit.
+3. **Header di nginx host saja** (config hanya di server, di luar repo). Berfungsi, tetapi konfigurasi
+   keamanan tidak bisa ditinjau/diuji dari repositori — persis masalah yang membuat temuan ini terlambat
+   terlihat.
+4. **Hibrida terkontrol:** header dokumen HTML + HSTS di **nginx host**, dipelihara sebagai template di
+   repo (`deploy/nginx/jedana.my.id.conf`); helmet tetap untuk API; `helmet()` dipindah ke **sebelum** mount
+   `/mcp` agar tidak ada jalur yang lolos.
 
 ## Keputusan
 
-Pilihan **3**. nginx mengirim, untuk semua respons:
+Pilihan **4**:
 
-- `Strict-Transport-Security: max-age=15552000` (6 bulan, **tanpa** `includeSubDomains`/`preload`
-  sampai semua subdomain dipastikan HTTPS).
-- `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
-  `X-Frame-Options: DENY`, `Permissions-Policy: geolocation=(), microphone=(), camera=()`.
-- `Content-Security-Policy`: `default-src 'self'; script-src 'self' 'sha256-<hash script tema>';
-  style-src 'self' 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self';
-  form-action 'self'; object-src 'none'`.
-
-Catatan yang disengaja: `style-src 'unsafe-inline'` diterima sebagai trade-off (dibutuhkan atribut
-`style` React), dan HSTS tetap dikirim meski TLS ada di Cloudflare — header ini yang melindungi
-pengunjung saat origin diakses langsung.
-
-Tanda keputusan ini salah: konsol browser penuh pelanggaran CSP setelah deploy (gejala paling awal:
-font tidak termuat, tema berkedip) → hash/daftar domain perlu dikoreksi, bukan CSP dimatikan.
+- **nginx host** mengirim untuk semua respons:
+  `Strict-Transport-Security: max-age=31536000; includeSubDomains` (tanpa `preload`; `includeSubDomains`
+  dipertahankan karena sudah dikirim helmet dan `*.jedana.my.id` tidak dipakai),
+  `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: strict-origin-when-cross-origin`,
+  `Permissions-Policy: geolocation=(), microphone=(), camera=()`, dan `Content-Security-Policy`:
+  `default-src 'self'; script-src 'self' 'sha256-<hash script tema>'; style-src 'self' 'unsafe-inline';
+  font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self';
+  frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'`.
+- Config tersebut **disimpan di repo** sebagai `deploy/nginx/jedana.my.id.conf` (template + komentar cara
+  pasang ke `/etc/nginx/sites-available/`). Perubahan header ditinjau lewat PR, bukan lewat SSH.
+- **helmet tetap aktif** untuk respons API (defense-in-depth), tetapi `helmet()` dipindah ke awal bootstrap
+  (sebelum middleware `/mcp`) sehingga `/mcp` tidak lagi bocor `X-Powered-By` dan ikut mendapat header.
+  Duplikasi HSTS (helmet + nginx host) diterima: nilainya searah dan HSTS bersifat monoton.
+- CSP: `style-src 'unsafe-inline'` diterima (atribut `style` React/Tailwind), `script-src` **tidak boleh**
+  `unsafe-inline`; hash dihitung dari `apps/web/index.html` dan dijaga cek otomatis di
+  `scripts/verify-security.sh`.
 
 ## Konsekuensi
 
-- **Lebih mudah:** konfigurasi keamanan bisa ditinjau di repo, diuji dengan `curl -I`, dan tidak
-  bergantung pada pengaturan dashboard Cloudflare.
-- **Lebih sulit / berutang:** hash script inline harus diperbarui bila `index.html` berubah (uji akan
-  menangkapnya); CSP perlu diperluas bila menambah domain eksternal baru.
-- **Harus diubah di fase berikutnya:** bila menambah analytics/embed pihak ketiga → perbarui CSP
-  secara sadar, bukan melemahkan `default-src`.
+- **Lebih mudah:** satu sumber header dokumen yang bisa ditinjau di repo; HSTS deterministik untuk semua
+  respons; `X-Powered-By` hilang.
+- **Lebih sulit / berutang:** dua lapisan header (nginx host untuk HTML/HSTS, helmet untuk API) harus dijaga
+  agar tidak bertentangan; `index.html` berubah → hash CSP dihitung ulang (ada cek-nya).
+- **Harus diubah di fase berikutnya:** bila menambah domain eksternal (analytics) → perluas CSP secara
+  sadar; bila memasang CDN → verifikasi ulang header di edge.
 
 ## Kapan ditinjau ulang
 
-- Bila `index.html` berubah (hash CSP), bila menambah domain eksternal (font/CDN/analytics), atau bila
-  subdomain lain mulai memakai HTTPS (pertimbangkan `includeSubDomains`).
+- `index.html` berubah (hash CSP), menambah domain eksternal, memasang CDN, atau ada subdomain baru yang
+  belum siap HTTPS (pertimbangkan mencabut `includeSubDomains`).

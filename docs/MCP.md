@@ -167,7 +167,7 @@ Tambahkan konfigurasi ke file `claude_desktop_config.json`:
 {
   "mcpServers": {
     "jedana": {
-      "url": "https://jedana.app/mcp",
+      "url": "https://jedana.my.id/mcp",
       "headers": {
         "Authorization": "Bearer jdn_YOUR_API_KEY"
       }
@@ -183,7 +183,7 @@ Tambahkan ke `.cursor/mcp.json` atau pengaturan MCP:
   "servers": {
     "jedana": {
       "type": "http",
-      "url": "https://jedana.app/mcp",
+      "url": "https://jedana.my.id/mcp",
       "headers": {
         "Authorization": "Bearer jdn_YOUR_API_KEY"
       }
