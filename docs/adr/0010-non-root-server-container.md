@@ -11,6 +11,7 @@
   bukan ke disk), tidak menulis file apa pun di dalam container. Tidak ada volume yang di-mount.
 - Container `web` tidak terpengaruh: ia memakai `nginx:1.29-alpine` yang sudah menurunkan hak ke user
   `nginx` untuk worker process.
+- Diverifikasi ulang saat implementasi (27 Okt 2026): Dockerfile runner memakai USER node (uid 1000) dengan chown /app dan npm_config_cache=/tmp/.npm.
 
 ## Pilihan yang dipertimbangkan
 

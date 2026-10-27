@@ -17,6 +17,7 @@ Fakta terukur (27 Okt 2026, `development` @ `7c46a7e`):
 - `.env` lokal: `JWT_SECRET` ada, panjang **24** karakter (di bawah 32 byte yang lazim untuk HS256).
 - Belum ada validasi env terpusat; `@nestjs/config@^4.0.4` dan `zod@^4.5.4` sudah menjadi dependency
   (tidak perlu menambah paket baru).
+- Diverifikasi ulang saat implementasi (27 Okt 2026): validasi Zod boot aktif dan docker-compose mensyaratkan JWT_SECRET via :? tanpa fallback.
 
 ## Pilihan yang dipertimbangkan
 

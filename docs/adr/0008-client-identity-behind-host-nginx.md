@@ -24,6 +24,7 @@ Topologi produksi **terverifikasi dari luar** pada 27 Okt 2026 (bukan asumsi):
   contohnya).
 - Karena tidak ada CDN, `$remote_addr` di nginx host **adalah IP klien sebenarnya** — tidak perlu
   `CF-Connecting-IP`, tidak perlu `real_ip_header`, tidak ada daftar IP edge untuk dipelihara.
+- Diverifikasi ulang saat implementasi (27 Okt 2026): getClientIp tervalidasi via net.isIP, Throttler dan MCP rate limit aktif dengan kunci IP riil.
 
 ## Pilihan yang dipertimbangkan
 

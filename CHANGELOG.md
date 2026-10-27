@@ -23,6 +23,13 @@ Format: Keep a Changelog · Versioning: SemVer.
 - Web initial bundle split per route.
 
 ### Security
+- Zero critical and high npm dependency advisories with automated blocking security gate (`scripts/verify-security.sh --strict`).
+- Fail-fast environment variable validation at startup with no public fallback JWT secrets in code or compose.
+- Conditional Google OAuth activation with fail-closed guard preventing exposure of mock credentials when unconfigured.
+- Real client IP resolution (`X-Real-IP`) with rate limiting per client IP on `/api/*` and handshake limit on auth endpoints.
+- Dedicated multi-stage rate limiting on `/mcp` (pre-auth 240 req/min per IP, post-auth 120 req/min per user key).
+- Origin security headers (HSTS with `includeSubDomains`, nosniff, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, and sha256 hash-locked CSP for theme script) via host Nginx vhost template (`deploy/nginx/jedana.my.id.conf`).
+- Hardened server container running as non-root user `node` (`uid=1000`) with scoped permissions.
 - Node.js runtime pinned to 24.22.1 across dev, Docker and CI (CVE-2026-111497, brotli decoder).
 - Request bodies with `Content-Encoding` other than identity are rejected (HTTP 415); JSON body
   limit reduced from 50 MB to 5 MB.

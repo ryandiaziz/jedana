@@ -45,20 +45,42 @@ Dokumen ini mendefinisikan model ancaman, rahasia wajib produksi, kontrol keaman
 - **Autentikasi MCP:** Middleware validasi `Bearer jdn_...` di `apps/server/src/main.ts` & `apps/server/src/mcp/mcp-auth.ts`.
 - **Proteksi Dekompresi:** Penolakan body terkompresi (`inflate: false`, limit 5MB) di `apps/server/src/main.ts` (mitigasi CVE-2026-111497).
 
-## 4. Kontrol yang Belum Ada (Rencana Mitigasi)
+## 4. Kontrol Akhir
 
-- **State Parameter OAuth (Fase S4):** Penggunaan random `state` nonce untuk mencegah serangan CSRF pada flow OAuth Google (ditunda karena fase S4 dilewati).
-- **Container Hardening & Origin Headers (Fase S6):** User non-root (`USER`) pada container runner `Dockerfile` dan header origin lengkap (`HSTS`, `CSP`, `X-Frame-Options`, dll.) pada template konfigurasi nginx host (bukan `nginx.conf` container).
+Tabel berikut merangkum seluruh kontrol keamanan aktif pada monorepo Jedana hasil fase S1–S6:
 
-## 5. Cara Memeriksa Postur Keamanan
+| Kontrol Keamanan | Di Mana Diterapkan | Cara Verifikasi |
+|---|---|---|
+| Ketergantungan Bebas Kerentanan (Critical/High = 0) | Monorepo (`package-lock.json`) | `npm audit` / `bash scripts/verify-security.sh` |
+| Validasi Environment & Tanpa Fallback Secret | `apps/server/src/config/env.validation.ts`, `docker-compose.yml` | Boot tanpa env / `scripts/verify-security.sh` |
+| Autentikasi Google Kondisional & Fail-Closed Guard | `apps/server/src/auth/google-configured.guard.ts` | Unit test & GET `/api/auth/google` (HTTP 503 jika belum dikonfigurasi) |
+| Resolusi IP Klien Riil (`X-Real-IP`) & Whitelist Hop | `apps/server/src/common/client-ip.ts`, `nginx.conf` | `scripts/verify-security.sh` & test `client-ip.spec.ts` |
+| Rate Limiting API Global (`/api/*`) & Auth | `apps/server/src/common/guards/ip-throttler.guard.ts`, `auth.controller.ts` | Request berulang > 100 req/min (HTTP 429) |
+| Rate Limiting Multi-Stage MCP (`/mcp`) | `apps/server/src/mcp/mcp-rate-limit.ts` | Pre-auth 240/min per IP, post-auth 120/min per user (HTTP 429) |
+| Origin Security Headers (HSTS, CSP, nosniff, frame, referrer) | `deploy/nginx/jedana.my.id.conf` (Nginx Host) | `scripts/verify-security.sh` & `curl -sI https://jedana.my.id/` |
+| Proteksi Helmet API & Penghapusan `X-Powered-By` | `apps/server/src/main.ts` (dipasang sebelum MCP/API) | `curl -sI https://jedana.my.id/api/health` |
+| Container Server Non-Root (`USER node`, uid 1000) | `apps/server/Dockerfile` (runner stage) | `docker run --rm --entrypoint id jedana-server:sec` |
+| Isolasi Port Internal (Tanpa Port Publik Backend) | `docker-compose.yml` (`server` tanpa directive `ports`) | `docker-compose config` / `scripts/verify-security.sh` |
+
+## 5. Yang Belum Dilindungi
+
+Meskipun postur pertahanan dasar telah diperkuat, batasan berikut belum terproteksi:
+
+- **Tidak Ada WAF di Origin:** Bila alamat IP origin (`43.134.83.20`) diakses langsung tanpa melewati nama domain atau lapisan WAF, server menerima koneksi langsung. Belum ada mitigasi DDoS layer 7 tingkat lanjut atau filtering payload cerdas di tingkat jaringan.
+- **CSP Masih Menggunakan `style-src 'unsafe-inline'`:** Kebutuhan atribut `style` inline dan class Tailwind CSS dinamis pada antarmuka frontend membuat directive CSP `style-src` tetap mengizinkan `'unsafe-inline'` (meskipun `script-src` telah diamankan tanpa `'unsafe-inline'` dan dikunci dengan hash SHA-256).
+- **Rate Limit In-Memory (Hilang Saat Restart & Single-Instance):** Data bucket rate limit (`IpThrottlerGuard` dan `mcp-rate-limit.ts`) disimpan dalam memori proses Node.js. Bucket akan ter-reset saat container restart dan tidak tersinkronisasi jika server dijalankan lebih dari 1 instance (memerlukan store terdistribusi seperti Redis bila scale-out).
+- **Token JWT Tidak Bisa Dicabut Per-Sesi (Stateless 7 Hari):** Token JWT berumur 7 hari dan divalidasi stateless. Belum ada mekanisme pembatalan (*revocation list* / token blacklisting) per-sesi; logout pada klien hanya menghapus penyimpanan lokal, sedangkan token tetap valid di sisi server hingga masa kedaluwarsa habis atau `JWT_SECRET` dirotasi secara global.
+- **State Parameter OAuth Google Dinamis:** Parameter `state` acak anti-CSRF pada handshake OAuth Google belum diintegrasikan dengan validasi session cookie/nonce dinamis.
+
+## 6. Cara Memeriksa Postur Keamanan
 
 Jalankan skrip verifikasi dari root repositori:
 
 ```bash
-# Verifikasi ketat / gate CI (default: mode strict)
+# Verifikasi ketat / gate CI (default: mode strict — seluruh cek blocking)
 bash scripts/verify-security.sh
 
-# Laporan postur keamanan repo (mode laporan non-blocking, exit 0)
+# Laporan postur keamanan repo (mode non-blocking, exit 0)
 bash scripts/verify-security.sh --report
 
 # Verifikasi fungsional web app & unit test

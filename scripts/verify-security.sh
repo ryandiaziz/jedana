@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Security posture checks for the Jedana monorepo.
 # Usage: scripts/verify-security.sh [--strict|--report]
-# In S2, default is strict (exit 1 if blocking advisories present).
-# Non-blocking findings for future phases (S3-S6) are labeled PENDING.
+# In S6, default is strict (exit 1 if any check fails).
+# Non-blocking inspection can be done with --report.
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
@@ -15,11 +15,9 @@ for arg in "$@"; do
 done
 
 HARD_FAILED=0
-PENDING=0
 
 pass() { echo "PASS  $1"; }
 fail_hard() { echo "FAIL  $1${2:+ — $2}"; HARD_FAILED=$((HARD_FAILED + 1)); }
-pending() { local phase="$1" msg="$2" det="${3:-}"; echo "PENDING $phase  $msg${det:+ — $det}"; PENDING=$((PENDING + 1)); }
 
 echo "== dependency advisories =="
 AUDIT_JSON=$(npm audit --json 2>/dev/null || true)
@@ -41,13 +39,13 @@ fi
 
 echo "== secret handling =="
 if grep -rq "fallback-secret" apps/server/src; then
-  pending "S3" "code falls back to a public JWT secret" "apps/server/src"
+  fail_hard "code falls back to a public JWT secret" "apps/server/src"
 else
   pass "no public JWT secret fallback in code"
 fi
 
 if grep -q "change_this_secret_in_production" docker-compose.yml; then
-  pending "S3" "docker-compose ships a default JWT_SECRET" "docker-compose.yml"
+  fail_hard "docker-compose ships a default JWT_SECRET" "docker-compose.yml"
 else
   pass "docker-compose has no default JWT_SECRET"
 fi
@@ -55,14 +53,14 @@ fi
 if grep -q "JWT_SECRET:?\|JWT_SECRET:\${JWT_SECRET:" docker-compose.yml; then
   pass "docker-compose requires JWT_SECRET"
 else
-  pending "S3" "docker-compose does not require JWT_SECRET"
+  fail_hard "docker-compose does not require JWT_SECRET"
 fi
 
 echo "== container hardening =="
 if grep -qE "^USER " apps/server/Dockerfile; then
   pass "server image declares USER"
 else
-  pending "S6" "server image runs as root (no USER)"
+  fail_hard "server image runs as root (no USER)"
 fi
 
 if python3 -c "
@@ -74,39 +72,70 @@ if m and 'ports:' in m.group(1):
 "; then
   pass "server service publishes no ports"
 else
-  pending "S6" "server service publishes ports"
+  fail_hard "server service publishes ports"
 fi
 
-echo "== origin headers (nginx.conf) =="
-for h in "Strict-Transport-Security" "X-Content-Type-Options" "X-Frame-Options\|frame-ancestors" \
-         "Referrer-Policy" "Content-Security-Policy"; do
-  if grep -qE "$h" nginx.conf; then
-    pass "nginx sends ${h//\\|/ /}"
+echo "== origin headers (deploy/nginx/jedana.my.id.conf) =="
+NGINX_CONF="deploy/nginx/jedana.my.id.conf"
+if [ ! -f "$NGINX_CONF" ]; then
+  fail_hard "host nginx template missing" "$NGINX_CONF"
+else
+  for h in "Strict-Transport-Security" "X-Content-Type-Options" "X-Frame-Options|frame-ancestors" \
+           "Referrer-Policy" "Content-Security-Policy"; do
+    if grep -qE "$h" "$NGINX_CONF"; then
+      pass "host nginx sends ${h//|/ }"
+    else
+      fail_hard "host nginx missing header" "$h"
+    fi
+  done
+
+  CSP_CHECK=$(python3 -c "
+import base64, hashlib, re, pathlib, sys
+try:
+    html = pathlib.Path('apps/web/index.html').read_text()
+    m_script = re.search(r'<script>(.*?)</script>', html, re.S)
+    if not m_script:
+        sys.exit(1)
+    expected_hash = base64.b64encode(hashlib.sha256(m_script.group(1).encode()).digest()).decode()
+
+    conf_path = pathlib.Path('$NGINX_CONF')
+    if not conf_path.exists():
+        sys.exit(2)
+    conf = conf_path.read_text()
+    m_csp = re.search(r\"Content-Security-Policy.*?'sha256-([^']+)'\", conf)
+    if not m_csp:
+        sys.exit(3)
+    found_hash = m_csp.group(1)
+    if expected_hash != found_hash:
+        sys.exit(4)
+    print(found_hash)
+except Exception:
+    sys.exit(5)
+" 2>&1)
+  CSP_STATUS=$?
+  if [ $CSP_STATUS -eq 0 ]; then
+    pass "CSP inline script hash matches apps/web/index.html ('sha256-$CSP_CHECK')"
   else
-    pending "S6" "nginx missing header" "$h"
+    fail_hard "CSP hash is stale, recompute it"
   fi
-done
+fi
 
 echo "== client identity & rate limiting =="
 if grep -rq "getClientIp" apps/server/src; then
   pass "client IP helper exists"
 else
-  pending "S5" "no client IP helper (rate limit keys are wrong behind a proxy)"
+  fail_hard "no client IP helper (rate limit keys are wrong behind a proxy)"
 fi
 
 if grep -rqi "rate.*limit" apps/server/src/mcp; then
   pass "MCP endpoint has its own rate limit"
 else
-  pending "S5" "MCP endpoint has no rate limit"
+  fail_hard "MCP endpoint has no rate limit"
 fi
 
 echo
 if [ "$HARD_FAILED" -eq 0 ]; then
-  if [ "$PENDING" -gt 0 ]; then
-    echo "== security: S2 gate passed (0 critical/high advisories, $PENDING pending check(s) for S3-S6) =="
-  else
-    echo "== security: all checks pass =="
-  fi
+  echo "== security: all checks pass =="
   exit 0
 fi
 

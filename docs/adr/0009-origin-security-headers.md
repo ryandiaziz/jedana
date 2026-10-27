@@ -22,6 +22,7 @@ Penyebabnya terbaca di repo:
   perilakunya bergantung pada apakah browser kebetulan memanggil `/api` lebih dulu — tidak deterministik.
 - `apps/web/index.html:13-38` memuat script tema inline; baris 39-56 style inline; font dimuat dari
   `fonts.googleapis.com` / `fonts.gstatic.com`.
+- Diverifikasi ulang saat implementasi (27 Okt 2026): template vhost deploy/nginx/jedana.my.id.conf memuat HSTS, CSP sha256 script tema index.html, dan helmet tetap aktif di API.
 
 ## Pilihan yang dipertimbangkan
 
