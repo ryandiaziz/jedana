@@ -1,6 +1,7 @@
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
+import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 interface RequestWithUser extends Request {
@@ -15,12 +16,14 @@ export class AuthController {
   constructor(private readonly jwtService: JwtService) {}
 
   @Get('google')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @UseGuards(AuthGuard('google'))
   googleAuth() {
     // Initiates the Google OAuth flow
   }
 
   @Get('google/callback')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req: RequestWithUser, @Res() res: Response) {
     // Generate JWT

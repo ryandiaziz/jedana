@@ -29,18 +29,25 @@ Dokumen ini mendefinisikan model ancaman, rahasia wajib produksi, kontrol keaman
 
 - **Validasi Environment Startup (ADR-0007 / Fase S3):** Validasi skema (Zod) saat server boot via `ConfigModule.forRoot({ validate: validateEnv })`. Menolak boot bila `JWT_SECRET` < 32 karakter atau konfigurasi produksi tidak lengkap. Semua fallback rahasia publik dihapus dari kode.
 - **CORS Per Environment (Fase S3):** Pada mode produksi, origin CORS dibatasi ketat hanya ke `FRONTEND_URL`. Pada mode pengembangan, origin tambahan (`localhost`, `127.0.0.1`) diizinkan.
-- **Header Keamanan API:** `helmet()` terpasang di `apps/server/src/main.ts`.
+- **Header Keamanan API:** `helmet()` terpasang di awal middleware `apps/server/src/main.ts` sebelum route MCP dan API sehingga seluruh respons (termasuk 401/429) terlindungi dan header `X-Powered-By` dihapus.
 - **Pengamanan Cookie Sesi:** Cookie `auth_token` menggunakan flag `httpOnly: true`, `secure: true` (prod), `sameSite: 'lax'` di `apps/server/src/auth/auth.controller.ts:31-36`.
 - **Validasi Payload:** `ValidationPipe` global dengan `whitelist: true` di `apps/server/src/main.ts`.
-- **Rate Limiting Global:** `@nestjs/throttler` (100 req/60s) di `apps/server/src/app.module.ts`.
-- **Autentikasi MCP:** Middleware validasi `x-api-key` di `apps/server/src/main.ts` & `apps/server/src/mcp/mcp-auth.ts`.
+- **Identitas Klien & Rate Limiting Terkelola (ADR-0008 / Fase S5):**
+  - Resolusi IP klien via `getClientIp` (`apps/server/src/common/client-ip.ts`) yang membaca header `X-Real-IP` tervalidasi `isIP()`. Nginx container mempertahankan IP klien asli melalui arahan `set_real_ip_from` dan `real_ip_header X-Real-IP`.
+  - **Catatan & Asumsi Keamanan Kritis:** Header `X-Real-IP` hanya boleh dipercaya karena port server backend (`3000`) tidak pernah dipublikasikan ke publik (`docker-compose.yml` tidak mendefinisikan `ports` untuk service `server`). Seluruh request wajib melalui reverse proxy nginx internal kita.
+  - **Rate Limiting Global API (`/api/*`):** `IpThrottlerGuard` (100 req/60s per IP klien riil) di `apps/server/src/app.module.ts`.
+  - **Rate Limiting Auth (`/api/auth/google*`):** Decorator `@Throttle` khusus (20 req/60s per IP klien) untuk mitigasi DoS pada handshake OAuth.
+  - **Rate Limiting MCP (`/mcp`):** Dua tahap in-memory fixed window limiter (`apps/server/src/mcp/mcp-rate-limit.ts`):
+    - Stage 1 (sebelum auth): 240 req/menit per IP klien (`ip:<client-ip>`) guna mencegah banjir request tanpa kredensial.
+    - Stage 2 (sesudah auth): 120 req/menit per user API key (`user:<user-id>`).
+    - Mengembalikan status HTTP 429 JSON `{ error: 'Too many requests', retryAfterSeconds }` dan header `Retry-After`. Entri kedaluwarsa dibersihkan secara otomatis untuk menjaga penggunaan memori.
+- **Autentikasi MCP:** Middleware validasi `Bearer jdn_...` di `apps/server/src/main.ts` & `apps/server/src/mcp/mcp-auth.ts`.
 - **Proteksi Dekompresi:** Penolakan body terkompresi (`inflate: false`, limit 5MB) di `apps/server/src/main.ts` (mitigasi CVE-2026-111497).
 
 ## 4. Kontrol yang Belum Ada (Rencana Mitigasi)
 
-- **State Parameter OAuth (Fase S4):** Penggunaan random `state` nonce untuk mencegah serangan CSRF pada flow OAuth Google.
-- **Client IP & MCP Throttling (Fase S5):** Helper `getClientIp` di balik reverse proxy dan rate limiting khusus untuk endpoint `/mcp`.
-- **Container Hardening & Origin Headers (Fase S6):** User non-root (`USER`) pada container runner `Dockerfile` dan header origin lengkap (`HSTS`, `CSP`, `X-Frame-Options`, dll.) pada `nginx.conf`.
+- **State Parameter OAuth (Fase S4):** Penggunaan random `state` nonce untuk mencegah serangan CSRF pada flow OAuth Google (ditunda karena fase S4 dilewati).
+- **Container Hardening & Origin Headers (Fase S6):** User non-root (`USER`) pada container runner `Dockerfile` dan header origin lengkap (`HSTS`, `CSP`, `X-Frame-Options`, dll.) pada template konfigurasi nginx host (bukan `nginx.conf` container).
 
 ## 5. Cara Memeriksa Postur Keamanan
 
