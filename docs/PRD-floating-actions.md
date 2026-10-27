@@ -1,6 +1,6 @@
-# PRD: Header Melayang (Floating Actions) & Tombol To-Top · v1.1 · 2026-10-26
+# PRD: Header Melayang (Floating Actions) & Tombol To-Top · v1.2 · 2026-10-27
 
-**Pemilik:** Ryan · **Disetujui oleh:** Ryan, 2026-10-26 · **Status:** disetujui
+**Pemilik:** Ryan · **Disetujui oleh:** Ryan, 2026-10-27 · **Status:** disetujui (revisi tata letak)
 
 ## 1. Konteks
 
@@ -96,6 +96,7 @@ adalah alasan utama aplikasi ini dipakai.
 - [ ] AC-6 (gagal): Given pencarian aktif dan hasil 0, when tombol pencarian di header melayang diklik, then fokus masuk ke input pencarian dan field tersebut terlihat di viewport, filter tetap aktif, dan nilai filter tidak berubah · verifikasi: manual no. 3
 - [ ] AC-7: Given halaman Wallets dan Recurring, when header melayang tampil, then memuat aksi utama halaman (New Wallet: menggulir ke kartu "Create New Wallet" + fokus input nama; New Rule: membuka form); di Tags dan Statistics hanya to-top yang tampil · verifikasi: manual no. 4
 - [ ] AC-8: Given navigasi keyboard, when Tab dari konten halaman, then tombol to-top dan seluruh aksi header melayang dapat difokuskan, punya `aria-label`, dan ring fokus terlihat · verifikasi: manual no. 5
+- [ ] AC-9: Given header melayang tampil di Dashboard, when dibandingkan dengan header halaman asli, then (a) bar menampilkan periode aktif (nama bulan, atau rentang siklus bila tanggal mulai ≠ 1) di sisi **kiri**, (b) `New Transaction` berada di sisi **kanan** — sama seperti header asli, bukan berpindah sisi, dan (c) tombol ‹ / › mengapit label periode · verifikasi: e2e + tangkapan layar 1280×800 dan 375×667
 
 ## 9. Risiko dan mitigasi
 
@@ -132,3 +133,4 @@ adalah alasan utama aplikasi ini dipakai.
 |---|---|---|---|
 | v1 | 2026-10-26 | draf awal dari sesi scoping | Ryan |
 | v1.1 | 2026-10-26 | AC-6 dikoreksi (fokus pencarian boleh menggulir ke field; yang wajib tetap adalah filter aktif dan nilainya tidak berubah); catatan aturan gulir di §5; ambang to-top diputuskan 1× tinggi viewport; PRD disetujui | Ryan |
+| v1.2 | 2026-10-27 | Hasil uji runtime: bar melayang memindahkan aksi utama ke sisi kiri (berlawanan dengan header halaman) dan tidak menampilkan periode aktif. AC-9 ditambahkan: periode di kiri (‹ bulan ›), aksi utama di kanan seperti header asli. Anggaran bundle & komponen tidak berubah | Ryan |

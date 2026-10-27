@@ -74,6 +74,16 @@ saat dipakai, atau registrasi aksi memicu re-render berulang (gejala: konsol pen
 (D4) dan larangan dependensi baru (D6). Ambang tombol to-top diputuskan 1× tinggi viewport
 (lihat PRD v1.1).
 
+### Amandemen 2026-10-27 (hasil uji runtime Ryan)
+
+- **D2 diperluas:** registrasi halaman boleh menyertakan satu slot `leading` (ReactNode milik halaman)
+  untuk konteks periode. Alasan: label periode harus mengikuti state halaman (bulan/rentang siklus) dan
+  tidak boleh diduplikasi di komponen global.
+- **Tata letak bar dicerminkan dari header halaman:** konteks/aksi utama tidak boleh berpindah sisi saat
+  bar muncul. Aturan urutan: `leading` (kiri) → aksi sekunder → aksi `primary` paling kanan. Di Dashboard:
+  kiri = `‹ <periode aktif> ›`, kanan = `[cari] [New Transaction]` — sama dengan header asli.
+- **D3 tetap:** ambang gulir masih fungsi murni; amandemen ini tidak menyentuh mekanisme visibilitas.
+
 ## Konsekuensi
 
 - **Lebih mudah:** satu tempat untuk ambang, gaya glass, safe-area, dan a11y; halaman baru cukup
