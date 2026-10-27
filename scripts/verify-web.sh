@@ -19,6 +19,9 @@ npm run build >/dev/null && echo "build: OK"
 echo "== lint web =="
 npm run lint --prefix apps/web && echo "lint: 0 problem"
 
+echo "== lint server =="
+(cd apps/server && npx eslint "src/**/*.ts" --max-warnings 999) && echo "lint server: 0 error"
+
 echo "== e2e =="
 npm run test:e2e 2>&1 | tail -5
 

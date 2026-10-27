@@ -16,7 +16,9 @@ interface RateLimitRecord {
  * In-memory fixed-window rate limiter for MCP endpoints (ADR-0008).
  * Cleans expired entries on access to prevent unbounded memory growth.
  */
-export function createMcpRateLimiter(options: McpRateLimitOptions): RequestHandler {
+export function createMcpRateLimiter(
+  options: McpRateLimitOptions,
+): RequestHandler {
   const { limit, windowMs, keyOf, now = Date.now } = options;
   const store = new Map<string, RateLimitRecord>();
 

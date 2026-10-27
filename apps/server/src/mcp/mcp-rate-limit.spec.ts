@@ -3,30 +3,38 @@ import { createMcpRateLimiter } from './mcp-rate-limit';
 
 describe('createMcpRateLimiter', () => {
   function createMockRes() {
-    const res: Partial<Response> & {
+    const setHeader = jest.fn((name: string, value: string) => {
+      res.headers[name] = value;
+      return res as Response;
+    });
+    const status = jest.fn((code: number) => {
+      res.statusCode = code;
+      return res as Response;
+    });
+    const json = jest.fn((body: unknown) => {
+      res.body = body;
+      return res as Response;
+    });
+    const res = {
+      headers: {} as Record<string, string>,
+      statusCode: undefined as number | undefined,
+      body: undefined as unknown,
+      setHeader,
+      status,
+      json,
+    };
+    return res as unknown as Response & {
       headers: Record<string, string>;
       statusCode?: number;
       body?: unknown;
-    } = {
-      headers: {},
-      setHeader: jest.fn((name: string, value: string) => {
-        res.headers[name] = value;
-        return res as Response;
-      }),
-      status: jest.fn((code: number) => {
-        res.statusCode = code;
-        return res as Response;
-      }),
-      json: jest.fn((body: unknown) => {
-        res.body = body;
-        return res as Response;
-      }),
+      setHeader: jest.Mock;
+      status: jest.Mock;
+      json: jest.Mock;
     };
-    return res as Response & typeof res;
   }
 
   it('allows the first 120 requests within the window', () => {
-    let fakeNow = 1_000_000;
+    const fakeNow = 1_000_000;
     const limiter = createMcpRateLimiter({
       limit: 120,
       windowMs: 60_000,
@@ -45,7 +53,7 @@ describe('createMcpRateLimiter', () => {
   });
 
   it('rejects request 121 with 429 and Retry-After header', () => {
-    let fakeNow = 1_000_000;
+    const fakeNow = 1_000_000;
     const limiter = createMcpRateLimiter({
       limit: 120,
       windowMs: 60_000,
@@ -107,7 +115,7 @@ describe('createMcpRateLimiter', () => {
   });
 
   it('tracks different keys independently without sharing quota', () => {
-    let fakeNow = 1_000_000;
+    const fakeNow = 1_000_000;
     const limiter = createMcpRateLimiter({
       limit: 10,
       windowMs: 60_000,

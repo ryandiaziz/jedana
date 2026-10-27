@@ -8,7 +8,7 @@ import { getClientIp } from './client-ip';
  */
 @Injectable()
 export class IpThrottlerGuard extends ThrottlerGuard {
-  protected async getTracker(req: Record<string, unknown>): Promise<string> {
-    return getClientIp(req as never);
+  protected getTracker(req: Record<string, unknown>): Promise<string> {
+    return Promise.resolve(getClientIp(req as never));
   }
 }
