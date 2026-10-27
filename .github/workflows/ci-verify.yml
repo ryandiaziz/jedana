@@ -47,8 +47,5 @@ jobs:
         working-directory: apps/server
         run: npx eslint "src/**/*.ts"
 
-      - name: Dependency Audit (non-blocking)
-        # Non-blocking until `npm audit fix` phase is executed: currently 26 advisories
-        # (see series README). Afterwards, remove continue-on-error to make it a gate.
-        continue-on-error: true
+      - name: Dependency Audit (blocking)
         run: npm audit --audit-level=high

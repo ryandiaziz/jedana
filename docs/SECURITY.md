@@ -46,11 +46,11 @@ Dokumen ini mendefinisikan model ancaman, rahasia wajib produksi, kontrol keaman
 Jalankan skrip verifikasi dari root repositori:
 
 ```bash
-# Laporan postur keamanan repo (mode laporan, exit 0)
+# Verifikasi ketat / gate CI (default: mode strict)
 bash scripts/verify-security.sh
 
-# Verifikasi ketat / gate CI (exit 1 jika ada temuan keamanan)
-bash scripts/verify-security.sh --strict
+# Laporan postur keamanan repo (mode laporan non-blocking, exit 0)
+bash scripts/verify-security.sh --report
 
 # Verifikasi fungsional web app & unit test
 bash scripts/verify-web.sh
