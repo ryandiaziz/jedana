@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
+import { GoogleConfiguredGuard } from './google-strategy.provider';
 
 interface RequestWithUser extends Request {
   user: {
@@ -17,14 +18,14 @@ export class AuthController {
 
   @Get('google')
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleConfiguredGuard, AuthGuard('google'))
   googleAuth() {
     // Initiates the Google OAuth flow
   }
 
   @Get('google/callback')
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleConfiguredGuard, AuthGuard('google'))
   googleAuthRedirect(@Req() req: RequestWithUser, @Res() res: Response) {
     // Generate JWT
     const payload = { email: req.user.email, sub: req.user.id };

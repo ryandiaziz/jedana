@@ -5,14 +5,22 @@ import { GoogleStrategy } from './google.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ApiKeyService } from './api-key.service';
 import { ApiKeyGuard } from './api-key.guard';
+import {
+  GoogleConfiguredGuard,
+  isGoogleConfigured,
+} from './google-strategy.provider';
+
+const googleConfigured = isGoogleConfigured();
 
 @Module({
   imports: [
+    ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_SECRET'),
@@ -23,7 +31,13 @@ import { ApiKeyGuard } from './api-key.guard';
     }),
   ],
   controllers: [AuthController, ApiKeyController],
-  providers: [GoogleStrategy, JwtStrategy, ApiKeyService, ApiKeyGuard],
+  providers: [
+    JwtStrategy,
+    ApiKeyService,
+    ApiKeyGuard,
+    GoogleConfiguredGuard,
+    ...(googleConfigured ? [GoogleStrategy] : []),
+  ],
   exports: [ApiKeyService, ApiKeyGuard],
 })
 export class AuthModule {}

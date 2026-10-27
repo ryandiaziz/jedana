@@ -23,11 +23,12 @@ Dokumen ini mendefinisikan model ancaman, rahasia wajib produksi, kontrol keaman
 | `GOOGLE_CALLBACK_URL` | URL absolut callback backend | `https://<domain>/api/auth/google/callback` | Wajib `https://` di production. Sesuaikan Authorized redirect URIs di GCP Console dan update `.env`. |
 | `FRONTEND_URL` | Origin web frontend resmi | `https://<domain>` | Wajib `https://` di production. Digunakan untuk whitelist CORS ketat dan redirect OAuth. |
 
-*Catatan: Dilarang keras meng-commit berkas `.env` atau nilai rahasia produksi ke version control. Tidak ada fallback string default di kode maupun file konfigurasi compose (`:?`).*
+*Catatan: Dilarang keras meng-commit berkas `.env` atau nilai rahasia produksi ke version control. Tidak ada fallback string default di kode maupun file konfigurasi compose (`:?`). OAuth Google hanya aktif bila ketiga variabel Google (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`) terisi lengkap; pada mode development tanpa kredensial tersebut, server tetap dapat boot normal dan route `/api/auth/google*` merespons dengan HTTP 503.*
 
 ## 3. Kontrol Keamanan Aktif
 
 - **Validasi Environment Startup (ADR-0007 / Fase S3):** Validasi skema (Zod) saat server boot via `ConfigModule.forRoot({ validate: validateEnv })`. Menolak boot bila `JWT_SECRET` < 32 karakter atau konfigurasi produksi tidak lengkap. Semua fallback rahasia publik dihapus dari kode.
+- **Aktivasi OAuth Kondisional & Proteksi Route (Fase S3b):** Provider `GoogleStrategy` didaftarkan secara kondisional hanya bila ketiga variabel Google OAuth terisi. Endpoint `/api/auth/google` dan `/api/auth/google/callback` dilindungi `GoogleConfiguredGuard` yang mengembalikan HTTP 503 saat kredensial tidak dikonfigurasi, menghindari pemakaian kredensial palsu / fallback rahasia tanpa memutus proses boot development.
 - **CORS Per Environment (Fase S3):** Pada mode produksi, origin CORS dibatasi ketat hanya ke `FRONTEND_URL`. Pada mode pengembangan, origin tambahan (`localhost`, `127.0.0.1`) diizinkan.
 - **Header Keamanan API:** `helmet()` terpasang di awal middleware `apps/server/src/main.ts` sebelum route MCP dan API sehingga seluruh respons (termasuk 401/429) terlindungi dan header `X-Powered-By` dihapus.
 - **Pengamanan Cookie Sesi:** Cookie `auth_token` menggunakan flag `httpOnly: true`, `secure: true` (prod), `sameSite: 'lax'` di `apps/server/src/auth/auth.controller.ts:31-36`.
