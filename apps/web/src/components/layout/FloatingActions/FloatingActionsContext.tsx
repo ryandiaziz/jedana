@@ -18,18 +18,40 @@ export interface FloatingAction {
   desktopOnly?: boolean;
 }
 
+export interface FloatingActionsOptions {
+  /** Page-owned context UI rendered on the left of the bar (e.g. period stepper). */
+  leading?: ReactNode;
+}
+
+interface FloatingRegistration {
+  actions: FloatingAction[];
+  leading?: ReactNode;
+}
+
 interface FloatingActionsContextValue {
   actions: FloatingAction[];
-  setActions: (next: FloatingAction[]) => void;
+  leading?: ReactNode;
+  setRegistration: (next: FloatingRegistration) => void;
 }
 
 const EMPTY_ACTIONS: FloatingAction[] = [];
+const EMPTY_REGISTRATION: FloatingRegistration = {
+  actions: EMPTY_ACTIONS,
+  leading: undefined,
+};
 
 const FloatingActionsContext = createContext<FloatingActionsContextValue | undefined>(undefined);
 
 export function FloatingActionsProvider({ children }: { children: ReactNode }): ReactElement {
-  const [actions, setActions] = useState<FloatingAction[]>(EMPTY_ACTIONS);
-  const value = useMemo(() => ({ actions, setActions }), [actions]);
+  const [registration, setRegistration] = useState<FloatingRegistration>(EMPTY_REGISTRATION);
+  const value = useMemo(
+    () => ({
+      actions: registration.actions,
+      leading: registration.leading,
+      setRegistration,
+    }),
+    [registration.actions, registration.leading]
+  );
 
   return (
     <FloatingActionsContext.Provider value={value}>
@@ -40,28 +62,33 @@ export function FloatingActionsProvider({ children }: { children: ReactNode }): 
 
 /**
  * Registers page-level actions into the floating action bar.
- * IMPORTANT: The `actions` array MUST be memoized (`useMemo`) by the caller;
- * passing an unmemoized array literal will cause an infinite render loop.
+ * IMPORTANT: The `actions` array and `options?.leading` node MUST be memoized (`useMemo`)
+ * by the caller; passing unmemoized literals will cause an infinite render loop.
  */
 // eslint-disable-next-line react-refresh/only-export-components
-export function useFloatingActions(actions: FloatingAction[]): void {
+export function useFloatingActions(
+  actions: FloatingAction[],
+  options?: FloatingActionsOptions
+): void {
   const context = useContext(FloatingActionsContext);
   if (!context) {
     throw new Error('useFloatingActions must be used within a FloatingActionsProvider');
   }
 
-  const setActionsRef = useRef(context.setActions);
+  const setRegistrationRef = useRef(context.setRegistration);
 
   useEffect(() => {
-    setActionsRef.current = context.setActions;
-  }, [context.setActions]);
+    setRegistrationRef.current = context.setRegistration;
+  }, [context.setRegistration]);
+
+  const leading = options?.leading;
 
   useEffect(() => {
-    setActionsRef.current(actions);
+    setRegistrationRef.current({ actions, leading });
     return () => {
-      setActionsRef.current(EMPTY_ACTIONS);
+      setRegistrationRef.current(EMPTY_REGISTRATION);
     };
-  }, [actions]);
+  }, [actions, leading]);
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -71,4 +98,13 @@ export function useFloatingActionsState(): FloatingAction[] {
     throw new Error('useFloatingActionsState must be used within a FloatingActionsProvider');
   }
   return context.actions;
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useFloatingLeading(): ReactNode {
+  const context = useContext(FloatingActionsContext);
+  if (!context) {
+    throw new Error('useFloatingLeading must be used within a FloatingActionsProvider');
+  }
+  return context.leading;
 }

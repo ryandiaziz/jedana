@@ -86,14 +86,6 @@ export default function Dashboard() {
 
   const floatingActions = useMemo<FloatingAction[]>(
     () => [
-      {
-        id: 'new-transaction',
-        label: 'New Transaction',
-        icon: <Plus size={18} />,
-        onSelect: openNewTransaction,
-        primary: true,
-        desktopOnly: true,
-      },
       ...(hasValidTransactions
         ? [
             {
@@ -105,21 +97,44 @@ export default function Dashboard() {
           ]
         : []),
       {
-        id: 'prev-period',
-        label: 'Previous Period',
-        icon: <ChevronLeft size={18} />,
-        onSelect: handlePrevMonth,
-      },
-      {
-        id: 'next-period',
-        label: 'Next Period',
-        icon: <ChevronRight size={18} />,
-        onSelect: handleNextMonth,
+        id: 'new-transaction',
+        label: 'New Transaction',
+        icon: <Plus size={18} />,
+        onSelect: openNewTransaction,
+        primary: true,
+        desktopOnly: true,
       },
     ],
-    [openNewTransaction, hasValidTransactions, focusSearch, handlePrevMonth, handleNextMonth]
+    [openNewTransaction, hasValidTransactions, focusSearch]
   );
-  useFloatingActions(floatingActions);
+
+  const floatingLeading = useMemo(
+    () => (
+      <div className="inline-flex items-center gap-0.5 bg-card/80 border border-border/80 rounded-2xl px-1 shadow-xs">
+        <button
+          type="button"
+          onClick={handlePrevMonth}
+          aria-label="Previous Period"
+          title="Previous Period"
+          className="w-9 h-9 min-w-[36px] flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-all cursor-pointer"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <span className="text-sm font-bold tracking-tight whitespace-nowrap px-1 font-tabular">{periodLabel}</span>
+        <button
+          type="button"
+          onClick={handleNextMonth}
+          aria-label="Next Period"
+          title="Next Period"
+          className="w-9 h-9 min-w-[36px] flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-all cursor-pointer"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+    ),
+    [periodLabel, handlePrevMonth, handleNextMonth]
+  );
+  useFloatingActions(floatingActions, { leading: floatingLeading });
 
   // Summaries: current vs previous period
   const { income, expense, net } = TransactionService.useSummary(startDate, endDate);

@@ -3,6 +3,8 @@ export {
   FloatingActionsProvider,
   useFloatingActions,
   useFloatingActionsState,
+  useFloatingLeading,
   type FloatingAction,
+  type FloatingActionsOptions,
 } from './FloatingActionsContext';
 export { useFloatingVisible, type FloatingVisibility } from '../../../utils/useFloatingVisible';

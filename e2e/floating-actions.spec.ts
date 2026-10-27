@@ -107,6 +107,37 @@ test.describe.serial('Floating actions and back-to-top', () => {
     await settleScroll(page);
   });
 
+  test('floating bar shows the active period on the left and the primary action on the right', async () => {
+    const originalViewport = page.viewportSize() ?? { width: 1280, height: 720 };
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.evaluate(() => window.scrollTo({ top: 400, behavior: 'instant' }));
+    await page.waitForFunction(() => Math.round(window.scrollY) === 400);
+    await settleScroll(page);
+
+    const bar = page.getByTestId('floating-actions');
+    const periodLabel = await page.locator('header h2').first().textContent();
+    await expect(bar.getByText(periodLabel!.trim(), { exact: false })).toBeVisible();
+
+    const labelBox = await bar.getByText(periodLabel!.trim(), { exact: false }).boundingBox();
+    const addBox = await bar.getByRole('button', { name: 'New Transaction' }).boundingBox();
+    const searchBox = await bar.getByRole('button', { name: 'Search transactions' }).boundingBox();
+    expect(labelBox!.x).toBeLessThan(addBox!.x);
+    expect(searchBox!.x).toBeLessThan(addBox!.x);
+    expect(addBox!.x + addBox!.width).toBeGreaterThan(searchBox!.x + searchBox!.width);
+
+    const outDir = '/home/ryan/.gemini/antigravity-cli/brain/3a781e68-4ee3-4b0b-977d-7991bb52a360';
+    await page.screenshot({ path: `${outDir}/floating-bar-desktop-1280x800.png` });
+
+    await page.setViewportSize({ width: 375, height: 667 });
+    try {
+      await expect(bar.getByText(periodLabel!.trim(), { exact: false })).toBeVisible();
+      await expect(bar.getByRole('button', { name: 'New Transaction' })).toBeHidden();
+      await page.screenshot({ path: `${outDir}/floating-bar-mobile-375x667.png` });
+    } finally {
+      await page.setViewportSize(originalViewport);
+    }
+  });
+
   test('month switch keeps scroll position', async () => {
     await page.evaluate(() => {
       (document.activeElement as HTMLElement | null)?.blur();

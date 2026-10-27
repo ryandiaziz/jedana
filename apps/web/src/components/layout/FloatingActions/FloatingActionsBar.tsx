@@ -1,12 +1,13 @@
 import { cn } from '../../../utils/cn';
 import { useFloatingVisible } from '../../../utils/useFloatingVisible';
-import { useFloatingActionsState } from './FloatingActionsContext';
+import { useFloatingActionsState, useFloatingLeading } from './FloatingActionsContext';
 
 export default function FloatingActionsBar() {
   const actions = useFloatingActionsState();
+  const leading = useFloatingLeading();
   const { floatingVisible } = useFloatingVisible();
 
-  if (actions.length === 0) {
+  if (actions.length === 0 && !leading) {
     return null;
   }
 
@@ -28,24 +29,7 @@ export default function FloatingActionsBar() {
       )}
     >
       <div className="max-w-5xl mx-auto h-full px-4 sm:px-6 md:px-8 lg:px-10 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {primaryAction && (
-            <button
-              type="button"
-              onClick={primaryAction.onSelect}
-              aria-label={primaryAction.label}
-              title={primaryAction.label}
-              tabIndex={floatingVisible ? 0 : -1}
-              className={cn(
-                'bg-primary text-primary-foreground items-center justify-center gap-2 px-4 min-h-[44px] min-w-[44px] rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-95 transition-all duration-150 cursor-pointer shadow-sm shadow-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                primaryAction.desktopOnly ? 'hidden md:inline-flex' : 'inline-flex'
-              )}
-            >
-              {primaryAction.icon}
-              <span>{primaryAction.label}</span>
-            </button>
-          )}
-        </div>
+        <div className="flex items-center gap-1.5 min-w-0">{leading ?? null}</div>
 
         <div className="flex items-center gap-1.5 ml-auto">
           {secondaryActions.map((action) => (
@@ -64,6 +48,22 @@ export default function FloatingActionsBar() {
               {action.icon}
             </button>
           ))}
+          {primaryAction && (
+            <button
+              type="button"
+              onClick={primaryAction.onSelect}
+              aria-label={primaryAction.label}
+              title={primaryAction.label}
+              tabIndex={floatingVisible ? 0 : -1}
+              className={cn(
+                'bg-primary text-primary-foreground items-center justify-center gap-2 px-4 min-h-[44px] min-w-[44px] rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-95 transition-all duration-150 cursor-pointer shadow-sm shadow-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                primaryAction.desktopOnly ? 'hidden md:inline-flex' : 'inline-flex'
+              )}
+            >
+              {primaryAction.icon}
+              <span>{primaryAction.label}</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
