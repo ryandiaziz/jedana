@@ -1,6 +1,7 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback, Profile } from 'passport-google-oauth20';
 import { Injectable, Inject, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg';
 
 export interface User {
@@ -15,13 +16,14 @@ export interface User {
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   private readonly logger = new Logger(GoogleStrategy.name);
 
-  constructor(@Inject('DATABASE_POOL') private readonly pool: Pool) {
+  constructor(
+    @Inject('DATABASE_POOL') private readonly pool: Pool,
+    config: ConfigService,
+  ) {
     super({
-      clientID: process.env.GOOGLE_CLIENT_ID || 'missing-client-id',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'missing-secret',
-      callbackURL:
-        process.env.GOOGLE_CALLBACK_URL ||
-        'http://localhost:3000/api/auth/google/callback',
+      clientID: config.getOrThrow<string>('GOOGLE_CLIENT_ID'),
+      clientSecret: config.getOrThrow<string>('GOOGLE_CLIENT_SECRET'),
+      callbackURL: config.getOrThrow<string>('GOOGLE_CALLBACK_URL'),
       scope: ['email', 'profile'],
     });
   }

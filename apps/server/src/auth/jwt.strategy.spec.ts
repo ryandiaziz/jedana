@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 import { Pool } from 'pg';
 
@@ -26,7 +27,10 @@ describe('JwtStrategy', () => {
     pool = {
       query: jest.fn(),
     };
-    strategy = new JwtStrategy(pool as unknown as Pool);
+    strategy = new JwtStrategy(
+      pool as unknown as Pool,
+      new ConfigService(process.env),
+    );
   });
 
   it('validate returns the user for a known subject', async () => {

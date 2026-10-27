@@ -18,11 +18,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jedana_password}
       POSTGRES_DB: ${POSTGRES_DB:-jedana_db}
       DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-jedana_user}:${POSTGRES_PASSWORD:-jedana_password}@${POSTGRES_HOST:-shared_postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-jedana_db}}
-      JWT_SECRET: ${JWT_SECRET:-change_this_secret_in_production}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost/api/auth/google/callback}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diset (openssl rand -base64 48)}
+      FRONTEND_URL: ${FRONTEND_URL:?wajib}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?wajib}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?wajib}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:?wajib}
 
   web:
     build:

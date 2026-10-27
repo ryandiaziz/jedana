@@ -40,9 +40,13 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Dynamic CORS configuration
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+  const devOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
   app.enableCors({
-    origin: [frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? [frontendUrl]
+        : [frontendUrl, ...devOrigins],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

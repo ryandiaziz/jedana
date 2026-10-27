@@ -16,27 +16,28 @@ Dokumen ini mendefinisikan model ancaman, rahasia wajib produksi, kontrol keaman
 
 | Variabel | Kriteria / Panjang | Cara Pembuatan | Dampak & Cara Rotasi |
 |---|---|---|---|
-| `JWT_SECRET` | String acak ≥ 32 karakter | `openssl rand -base64 48` | Ganti nilai di `.env` & restart server → seluruh sesi login aktif hangus (logout global). |
+| `JWT_SECRET` | String acak ≥ 32 karakter | `openssl rand -base64 48` | Ganti nilai di `.env` & restart server → seluruh sesi login aktif hangus (logout global). Divalidasi saat boot (fail-fast, tanpa fallback). |
 | `POSTGRES_*` / `DATABASE_URL` | User & password database kuat | `openssl rand -base64 24` | Update password di Postgres, sesuaikan `.env`, lalu restart server backend. |
-| `GOOGLE_CLIENT_ID` | OAuth Client ID GCP | Didapat dari Google Cloud Console | Perbarui OAuth credentials di GCP Console dan konfigurasi `.env`. |
-| `GOOGLE_CLIENT_SECRET` | OAuth Client Secret GCP | Didapat dari Google Cloud Console | Reset di GCP Console, pasang secret baru ke `.env`, lalu restart server. |
-| `GOOGLE_CALLBACK_URL` | URL absolut callback backend | `https://<domain>/api/auth/google/callback` | Sesuaikan Authorized redirect URIs di GCP Console dan update `.env`. |
-| `FRONTEND_URL` | Origin web frontend resmi | `https://<domain>` | Ubah di `.env` untuk sinkronisasi CORS dan pengarahan redirect OAuth. |
+| `GOOGLE_CLIENT_ID` | OAuth Client ID GCP | Didapat dari Google Cloud Console | Wajib di production. Perbarui OAuth credentials di GCP Console dan konfigurasi `.env`. |
+| `GOOGLE_CLIENT_SECRET` | OAuth Client Secret GCP | Didapat dari Google Cloud Console | Wajib di production. Reset di GCP Console, pasang secret baru ke `.env`, lalu restart server. |
+| `GOOGLE_CALLBACK_URL` | URL absolut callback backend | `https://<domain>/api/auth/google/callback` | Wajib `https://` di production. Sesuaikan Authorized redirect URIs di GCP Console dan update `.env`. |
+| `FRONTEND_URL` | Origin web frontend resmi | `https://<domain>` | Wajib `https://` di production. Digunakan untuk whitelist CORS ketat dan redirect OAuth. |
 
-*Catatan: Dilarang keras meng-commit berkas `.env` atau nilai rahasia produksi ke version control.*
+*Catatan: Dilarang keras meng-commit berkas `.env` atau nilai rahasia produksi ke version control. Tidak ada fallback string default di kode maupun file konfigurasi compose (`:?`).*
 
 ## 3. Kontrol Keamanan Aktif
 
-- **Header Keamanan API:** `helmet()` terpasang di `apps/server/src/main.ts:37`.
+- **Validasi Environment Startup (ADR-0007 / Fase S3):** Validasi skema (Zod) saat server boot via `ConfigModule.forRoot({ validate: validateEnv })`. Menolak boot bila `JWT_SECRET` < 32 karakter atau konfigurasi produksi tidak lengkap. Semua fallback rahasia publik dihapus dari kode.
+- **CORS Per Environment (Fase S3):** Pada mode produksi, origin CORS dibatasi ketat hanya ke `FRONTEND_URL`. Pada mode pengembangan, origin tambahan (`localhost`, `127.0.0.1`) diizinkan.
+- **Header Keamanan API:** `helmet()` terpasang di `apps/server/src/main.ts`.
 - **Pengamanan Cookie Sesi:** Cookie `auth_token` menggunakan flag `httpOnly: true`, `secure: true` (prod), `sameSite: 'lax'` di `apps/server/src/auth/auth.controller.ts:31-36`.
-- **Validasi Payload:** `ValidationPipe` global dengan `whitelist: true` di `apps/server/src/main.ts:53-59`.
-- **Rate Limiting Global:** `@nestjs/throttler` (100 req/60s) di `apps/server/src/app.module.ts:55-60`.
-- **Autentikasi MCP:** Middleware validasi `x-api-key` di `apps/server/src/main.ts:32` & `apps/server/src/mcp/mcp-auth.ts`.
-- **Proteksi Dekompresi:** Penolakan body terkompresi (`inflate: false`, limit 5MB) di `apps/server/src/main.ts:19-20` (mitigasi CVE-2026-111497).
+- **Validasi Payload:** `ValidationPipe` global dengan `whitelist: true` di `apps/server/src/main.ts`.
+- **Rate Limiting Global:** `@nestjs/throttler` (100 req/60s) di `apps/server/src/app.module.ts`.
+- **Autentikasi MCP:** Middleware validasi `x-api-key` di `apps/server/src/main.ts` & `apps/server/src/mcp/mcp-auth.ts`.
+- **Proteksi Dekompresi:** Penolakan body terkompresi (`inflate: false`, limit 5MB) di `apps/server/src/main.ts` (mitigasi CVE-2026-111497).
 
 ## 4. Kontrol yang Belum Ada (Rencana Mitigasi)
 
-- **Validasi Environment Startup (Fase S3):** Validasi ketat variabel env untuk mencegah fallback hardcoded secret dan startup dengan env kosong.
 - **State Parameter OAuth (Fase S4):** Penggunaan random `state` nonce untuk mencegah serangan CSRF pada flow OAuth Google.
 - **Client IP & MCP Throttling (Fase S5):** Helper `getClientIp` di balik reverse proxy dan rate limiting khusus untuk endpoint `/mcp`.
 - **Container Hardening & Origin Headers (Fase S6):** User non-root (`USER`) pada container runner `Dockerfile` dan header origin lengkap (`HSTS`, `CSP`, `X-Frame-Options`, dll.) pada `nginx.conf`.
