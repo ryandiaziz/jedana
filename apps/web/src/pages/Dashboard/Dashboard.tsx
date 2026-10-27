@@ -72,6 +72,18 @@ export default function Dashboard() {
 
   const focusSearch = useCallback(() => searchRef.current?.focusSearch(), []);
 
+  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.value) return;
+    const [year, month] = e.target.value.split('-');
+    setCurrentMonthDate(new Date(Number(year), Number(month) - 1, 1));
+  };
+
+  // Transactions query
+  const transactions = TransactionService.useRecentTransactions(startDate, endDate);
+  const validTransactions = useMemo(() => transactions?.filter((t) => !t.isVoided) || [], [transactions]);
+  const voidedTransactions = useMemo(() => transactions?.filter((t) => t.isVoided) || [], [transactions]);
+  const hasValidTransactions = validTransactions.length > 0;
+
   const floatingActions = useMemo<FloatingAction[]>(
     () => [
       {
@@ -82,12 +94,16 @@ export default function Dashboard() {
         primary: true,
         desktopOnly: true,
       },
-      {
-        id: 'search',
-        label: 'Search transactions',
-        icon: <Search size={18} />,
-        onSelect: focusSearch,
-      },
+      ...(hasValidTransactions
+        ? [
+            {
+              id: 'search',
+              label: 'Search transactions',
+              icon: <Search size={18} />,
+              onSelect: focusSearch,
+            },
+          ]
+        : []),
       {
         id: 'prev-period',
         label: 'Previous Period',
@@ -101,20 +117,9 @@ export default function Dashboard() {
         onSelect: handleNextMonth,
       },
     ],
-    [openNewTransaction, focusSearch, handlePrevMonth, handleNextMonth]
+    [openNewTransaction, hasValidTransactions, focusSearch, handlePrevMonth, handleNextMonth]
   );
   useFloatingActions(floatingActions);
-
-  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.value) return;
-    const [year, month] = e.target.value.split('-');
-    setCurrentMonthDate(new Date(Number(year), Number(month) - 1, 1));
-  };
-
-  // Transactions query
-  const transactions = TransactionService.useRecentTransactions(startDate, endDate);
-  const validTransactions = useMemo(() => transactions?.filter((t) => !t.isVoided) || [], [transactions]);
-  const voidedTransactions = useMemo(() => transactions?.filter((t) => t.isVoided) || [], [transactions]);
 
   // Summaries: current vs previous period
   const { income, expense, net } = TransactionService.useSummary(startDate, endDate);

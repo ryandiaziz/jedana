@@ -135,4 +135,41 @@ test.describe.serial('Floating actions and back-to-top', () => {
     const scrollAfter = await page.evaluate(() => window.scrollY);
     expect(Math.abs(scrollAfter - scrollBefore)).toBeLessThanOrEqual(4);
   });
+
+  test('back-to-top is instant with reduced motion', async () => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+
+    await page.evaluate(() => {
+      document.body.style.minHeight = '250vh';
+      window.scrollTo({ top: window.innerHeight + 120, behavior: 'instant' });
+    });
+    await page.waitForFunction(() => window.scrollY >= window.innerHeight);
+
+    const toTopBtn = page.getByRole('button', { name: 'Back to top' });
+    await expect(toTopBtn).toBeVisible();
+    await toTopBtn.click();
+
+    await page.waitForFunction(() => window.scrollY === 0, undefined, { timeout: 200 });
+    await expect(toTopBtn).toBeHidden();
+
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+  });
+
+  test('floating actions stay hidden on short pages', async () => {
+    await page.evaluate(() => {
+      document.body.style.minHeight = '';
+      window.scrollTo(0, 0);
+    });
+    await page.waitForFunction(() => window.scrollY === 0);
+
+    await expect(page.getByText('No transactions yet')).toBeVisible();
+    await expect(page.getByTestId('floating-actions')).toBeHidden();
+    await expect(page.getByTestId('to-top')).toBeHidden();
+    await expect(
+      page.getByTestId('floating-actions').getByRole('button', {
+        name: 'Search transactions',
+        includeHidden: true,
+      }),
+    ).toHaveCount(0);
+  });
 });

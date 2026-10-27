@@ -211,6 +211,12 @@
     opacity: 1;
     background-color: var(--color-muted);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
 }
 
 /* ==========================================================================

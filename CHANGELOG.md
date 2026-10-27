@@ -6,6 +6,8 @@ Format: Keep a Changelog · Versioning: SemVer.
 ## [Unreleased]
 
 ### Added
+- Floating quick-action header (new transaction, search, previous/next period) and a back-to-top
+  button on every scrolling page; respects `prefers-reduced-motion` and keyboard navigation.
 - Offline-first ledger: wallets (envelope budgeting), income/expense transactions, multi-tag,
   payees, void (soft cancel), transaction search and CSV export.
 - Budgeting per tag and recurring transactions with automatic due-date generation.

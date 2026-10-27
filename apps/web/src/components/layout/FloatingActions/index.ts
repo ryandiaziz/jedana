@@ -5,4 +5,4 @@ export {
   useFloatingActionsState,
   type FloatingAction,
 } from './FloatingActionsContext';
-export { useFloatingVisible, type FloatingVisibility } from './useFloatingVisible';
+export { useFloatingVisible, type FloatingVisibility } from '../../../utils/useFloatingVisible';

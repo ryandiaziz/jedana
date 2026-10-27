@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { resolveBackToTopVisible, resolveFloatingVisible } from '../../../utils/scroll';
+import { resolveBackToTopVisible, resolveFloatingVisible } from './scroll';
 
 export interface FloatingVisibility {
   floatingVisible: boolean;
@@ -49,10 +49,12 @@ export function useFloatingVisible(): FloatingVisibility {
 
     window.addEventListener('scroll', scheduleUpdate, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('orientationchange', handleResize, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', scheduleUpdate);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
       if (rafId !== null) {
         window.cancelAnimationFrame(rafId);
       }
