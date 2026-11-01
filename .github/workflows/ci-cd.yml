@@ -74,5 +74,5 @@ jobs:
           cd /var/www/jedana
           git fetch --tags --force origin
           git checkout --force "${{ github.ref_name }}"
-          docker compose -f docker-compose.deploy.yml up -d --build
+          docker compose -f docker-compose.deploy.yml up -d --build --force-recreate
           git checkout --force master
