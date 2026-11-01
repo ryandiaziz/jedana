@@ -81,3 +81,4 @@ jobs:
             git fetch --tags --force
             git checkout --force ${{ github.ref_name }}
             docker compose -f docker-compose.deploy.yml up -d --build
+            git checkout --force master
