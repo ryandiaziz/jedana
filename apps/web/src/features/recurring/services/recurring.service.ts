@@ -16,6 +16,8 @@ export interface CreateRecurringInput {
   endDate?: number;
 }
 
+let inFlightGeneration: Promise<{ generatedCount: number; generatedTitles: string[] }> | null = null;
+
 export const RecurringService = {
   /**
    * Adds a new recurring transaction rule.
@@ -97,8 +99,19 @@ export const RecurringService = {
    * Generator Engine:
    * Scans all active recurring rules, computes due dates up to `Date.now()`,
    * creates actual transactions via TransactionService, and updates lastGeneratedDate.
+   * Concurrency-guarded to prevent overlapping generator runs.
    */
-  async generateDueTransactions(): Promise<{ generatedCount: number; generatedTitles: string[] }> {
+  generateDueTransactions(): Promise<{ generatedCount: number; generatedTitles: string[] }> {
+    if (inFlightGeneration) {
+      return inFlightGeneration;
+    }
+    inFlightGeneration = this.executeGenerateDueTransactions().finally(() => {
+      inFlightGeneration = null;
+    });
+    return inFlightGeneration;
+  },
+
+  async executeGenerateDueTransactions(): Promise<{ generatedCount: number; generatedTitles: string[] }> {
     const now = Date.now();
     const rules = await db.recurring_transactions
       .filter((r) => !r.isDeleted && r.isActive)
@@ -196,24 +209,43 @@ export const RecurringService = {
         dueTimestamps.sort((a, b) => a - b);
 
         for (const ts of dueTimestamps) {
-          await TransactionService.addTransaction({
-            walletId: rule.walletId,
-            type: rule.type,
-            amount: rule.amount,
-            date: ts,
-            note: rule.note,
-            payee: rule.payee,
-            tags: rule.tags || [],
-          });
-          generatedCount++;
-          generatedTitles.push(rule.note);
+          // Check if a non-deleted transaction already exists for this recurring instance
+          // (matching date, walletId, type, amount, note)
+          const existing = await db.transactions
+            .where('date')
+            .equals(ts)
+            .filter(
+              (t) =>
+                !t.isDeleted &&
+                t.walletId === rule.walletId &&
+                t.type === rule.type &&
+                t.amount === rule.amount &&
+                t.note === rule.note
+            )
+            .first();
+
+          if (!existing) {
+            await TransactionService.addTransaction({
+              walletId: rule.walletId,
+              type: rule.type,
+              amount: rule.amount,
+              date: ts,
+              note: rule.note,
+              payee: rule.payee,
+              tags: rule.tags || [],
+            });
+            generatedCount++;
+            generatedTitles.push(rule.note);
+          }
         }
 
         const latestTimestamp = dueTimestamps[dueTimestamps.length - 1];
-        await db.recurring_transactions.update(rule.id!, {
-          lastGeneratedDate: latestTimestamp,
-          updatedAt: Date.now(),
-        });
+        if (!rule.lastGeneratedDate || latestTimestamp > rule.lastGeneratedDate) {
+          await db.recurring_transactions.update(rule.id!, {
+            lastGeneratedDate: latestTimestamp,
+            updatedAt: Date.now(),
+          });
+        }
       }
     }
 

@@ -173,6 +173,52 @@ describe('SyncService', () => {
       });
     });
 
+    it('should pull transactions with camelCase mapping including isVoided', async () => {
+      const mockTxs = [
+        {
+          id: 'tx-voided',
+          user_id: 'u1',
+          wallet_id: 'w-1',
+          type: 'EXPENSE',
+          amount: '27000',
+          date: 1700000000000,
+          note: 'Tagihan Youtube Premium',
+          payee: 'Youtube',
+          is_voided: true,
+          is_deleted: false,
+          created_at: new Date('2026-01-01'),
+          updated_at: new Date('2026-01-01'),
+        },
+      ];
+
+      mockPool.query.mockImplementation((query: string) => {
+        if (typeof query === 'string' && query.includes('SELECT NOW()')) {
+          return Promise.resolve({ rows: [{ now: new Date() }] });
+        }
+        if (query.includes('FROM transactions WHERE')) {
+          return Promise.resolve({ rows: mockTxs });
+        }
+        return Promise.resolve({ rows: [] });
+      });
+
+      const result = await service.pull('u1', new Date(0));
+      expect(result.data.transactions).toHaveLength(1);
+      expect(result.data.transactions[0]).toEqual({
+        id: 'tx-voided',
+        userId: 'u1',
+        walletId: 'w-1',
+        type: 'EXPENSE',
+        amount: 27000,
+        date: 1700000000000,
+        note: 'Tagihan Youtube Premium',
+        payee: 'Youtube',
+        isVoided: true,
+        isDeleted: false,
+        createdAt: new Date('2026-01-01').getTime(),
+        updatedAt: new Date('2026-01-01').getTime(),
+      });
+    });
+
     it('should return a cursor Date where cursor.getTime() >= lastSync.getTime()', async () => {
       const fixedNow = new Date('2026-02-01T12:00:00Z');
       mockPool.query.mockImplementation((query: string) => {
@@ -452,6 +498,45 @@ describe('SyncService', () => {
       );
       expect(tombstoneCalls).toHaveLength(2);
       expect(tombstoneCalls[1][0]).toContain('TRUE');
+    });
+
+    it('should push transactions with isVoided preserved in query and values', async () => {
+      mockClient.query.mockImplementation((sql: string) => {
+        if (sql === 'BEGIN' || sql === 'COMMIT') return Promise.resolve();
+        if (sql.includes('SELECT id, name, is_deleted FROM wallets')) {
+          return Promise.resolve({
+            rows: [{ id: 'w1', name: 'Dompet Utama', is_deleted: false }],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      });
+
+      const pushData = {
+        transactions: [
+          {
+            id: 'tx-void-1',
+            walletId: 'w1',
+            type: 'EXPENSE',
+            amount: 27000,
+            date: Date.now(),
+            note: 'Tagihan Youtube Premium',
+            isVoided: true,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        ],
+      };
+
+      const result = await service.push('u1', pushData);
+      expect(result).toEqual({ success: true });
+
+      const txInsertCall = mockClient.query.mock.calls.find((call) =>
+        call[0].includes('INSERT INTO transactions'),
+      );
+      expect(txInsertCall).toBeDefined();
+      expect(txInsertCall[0]).toContain('is_voided');
+      // Verify is_voided value passed to SQL is true
+      expect(txInsertCall[1]).toContain(true);
     });
 
     it('should ROLLBACK on unexpected database error', async () => {

@@ -90,4 +90,122 @@ describe('RecurringService', () => {
     const secondRun = await RecurringService.generateDueTransactions();
     expect(secondRun.generatedCount).toBe(0);
   });
+
+  it('should not create duplicates when called concurrently', async () => {
+    const today = new Date();
+    const threeDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3, 8, 0).getTime();
+
+    await db.recurring_transactions.add({
+      id: 'rec-concurrent-test',
+      walletId: 'w-default',
+      type: 'EXPENSE',
+      amount: 15000,
+      note: 'Snack Sore',
+      tags: ['Snacks'],
+      frequency: 'DAILY',
+      startDate: threeDaysAgo,
+      isActive: true,
+      isDeleted: false,
+      createdAt: threeDaysAgo,
+      updatedAt: threeDaysAgo,
+    });
+
+    // Run generator concurrently
+    const [run1, run2] = await Promise.all([
+      RecurringService.generateDueTransactions(),
+      RecurringService.generateDueTransactions(),
+    ]);
+
+    expect(run1.generatedCount).toBe(run2.generatedCount);
+
+    const txs = await db.transactions.filter((t) => t.note === 'Snack Sore').toArray();
+    expect(txs.length).toBe(run1.generatedCount);
+  });
+
+  it('should not recreate transactions if matching transactions already exist even if lastGeneratedDate is unset', async () => {
+    const targetDate = new Date(2026, 10, 1, 9, 0, 0, 0).getTime(); // Nov 1, 2026
+
+    // Pre-existing transaction in DB
+    await db.transactions.add({
+      id: 'tx-existing-1',
+      walletId: 'w-default',
+      type: 'EXPENSE',
+      amount: 27000,
+      date: targetDate,
+      note: 'Tagihan Youtube Premium',
+      payee: 'Youtube',
+      isVoided: false,
+      isDeleted: false,
+      createdAt: targetDate,
+      updatedAt: targetDate,
+    });
+
+    // Rule with lastGeneratedDate undefined
+    await db.recurring_transactions.add({
+      id: 'rec-youtube',
+      walletId: 'w-default',
+      type: 'EXPENSE',
+      amount: 27000,
+      note: 'Tagihan Youtube Premium',
+      payee: 'Youtube',
+      tags: ['Subscription'],
+      frequency: 'MONTHLY',
+      dayOfMonth: 1,
+      startDate: targetDate - 1000,
+      isActive: true,
+      isDeleted: false,
+      createdAt: targetDate,
+      updatedAt: targetDate,
+    });
+
+    const result = await RecurringService.generateDueTransactions();
+    expect(result.generatedTitles).not.toContain('Tagihan Youtube Premium');
+
+    const txs = await db.transactions.filter((t) => t.note === 'Tagihan Youtube Premium').toArray();
+    expect(txs.length).toBe(1);
+    expect(txs[0].id).toBe('tx-existing-1');
+  });
+
+  it('should not recreate transactions if the existing transaction has been voided', async () => {
+    const targetDate = new Date(2026, 10, 1, 9, 0, 0, 0).getTime(); // Nov 1, 2026
+
+    // Pre-existing VOIDED transaction in DB
+    await db.transactions.add({
+      id: 'tx-voided-1',
+      walletId: 'w-default',
+      type: 'EXPENSE',
+      amount: 650000,
+      date: targetDate,
+      note: 'Bayar Kos Bulanan',
+      payee: 'Kos',
+      isVoided: true,
+      isDeleted: false,
+      createdAt: targetDate,
+      updatedAt: targetDate,
+    });
+
+    await db.recurring_transactions.add({
+      id: 'rec-kos',
+      walletId: 'w-default',
+      type: 'EXPENSE',
+      amount: 650000,
+      note: 'Bayar Kos Bulanan',
+      payee: 'Kos',
+      tags: ['Kos'],
+      frequency: 'MONTHLY',
+      dayOfMonth: 1,
+      startDate: targetDate - 1000,
+      isActive: true,
+      isDeleted: false,
+      createdAt: targetDate,
+      updatedAt: targetDate,
+    });
+
+    const result = await RecurringService.generateDueTransactions();
+    expect(result.generatedTitles).not.toContain('Bayar Kos Bulanan');
+
+    const txs = await db.transactions.filter((t) => t.note === 'Bayar Kos Bulanan').toArray();
+    expect(txs.length).toBe(1);
+    expect(txs[0].isVoided).toBe(true);
+  });
 });
