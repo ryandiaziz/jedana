@@ -2,10 +2,36 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../../../utils/cn';
 
+export type TooltipSide = 'right' | 'left' | 'top' | 'bottom';
+
+interface PositionConfig {
+  getCoords: (rect: DOMRect) => { top: number; left: number };
+  transform: string;
+}
+
+const SIDE_CONFIG: Record<TooltipSide, PositionConfig> = {
+  right: {
+    getCoords: (rect) => ({ top: rect.top + rect.height / 2, left: rect.right + 10 }),
+    transform: 'translateY(-50%)',
+  },
+  left: {
+    getCoords: (rect) => ({ top: rect.top + rect.height / 2, left: rect.left - 10 }),
+    transform: 'translate(-100%, -50%)',
+  },
+  top: {
+    getCoords: (rect) => ({ top: rect.top - 8, left: rect.left + rect.width / 2 }),
+    transform: 'translate(-50%, -100%)',
+  },
+  bottom: {
+    getCoords: (rect) => ({ top: rect.bottom + 8, left: rect.left + rect.width / 2 }),
+    transform: 'translate(-50%, 0)',
+  },
+};
+
 export interface TooltipProps {
   content: React.ReactNode;
   children: React.ReactNode;
-  side?: 'right' | 'left' | 'top' | 'bottom';
+  side?: TooltipSide;
   enabled?: boolean;
   delay?: number;
   className?: string;
@@ -22,58 +48,51 @@ export default function Tooltip({
   wrapperClassName,
 }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const calculatePosition = () => {
     if (!triggerRef.current || typeof window === 'undefined') return;
     const rect = triggerRef.current.getBoundingClientRect();
-
-    let top = 0;
-    let left = 0;
-
-    switch (side) {
-      case 'right':
-        top = rect.top + rect.height / 2;
-        left = rect.right + 10;
-        break;
-      case 'left':
-        top = rect.top + rect.height / 2;
-        left = rect.left - 10;
-        break;
-      case 'top':
-        top = rect.top - 8;
-        left = rect.left + rect.width / 2;
-        break;
-      case 'bottom':
-        top = rect.bottom + 8;
-        left = rect.left + rect.width / 2;
-        break;
-    }
+    const config = SIDE_CONFIG[side];
+    const rawCoords = config.getCoords(rect);
 
     // Clamp top to keep tooltip within viewport
-    const clampedTop = Math.max(12, Math.min(window.innerHeight - 36, top));
-    setCoords({ top: clampedTop, left });
+    const clampedTop = Math.max(12, Math.min(window.innerHeight - 36, rawCoords.top));
+    setCoords({ top: clampedTop, left: rawCoords.left });
   };
 
   const handleMouseEnter = () => {
-    if (!enabled) return;
+    if (!enabled || !content) return;
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
     timeoutRef.current = setTimeout(() => {
       calculatePosition();
       setIsOpen(true);
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
     }, delay);
   };
 
   const handleMouseLeave = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setIsOpen(false);
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+
+    setIsVisible(false);
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 150);
   };
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     };
   }, []);
 
@@ -82,6 +101,7 @@ export default function Tooltip({
     if (!isOpen) return;
 
     const handleScrollOrResize = () => {
+      setIsVisible(false);
       setIsOpen(false);
     };
 
@@ -92,23 +112,6 @@ export default function Tooltip({
       window.removeEventListener('resize', handleScrollOrResize);
     };
   }, [isOpen]);
-
-  if (!enabled || !content) {
-    return <>{children}</>;
-  }
-
-  const getTransform = () => {
-    switch (side) {
-      case 'right':
-        return 'translateY(-50%)';
-      case 'left':
-        return 'translate(-100%, -50%)';
-      case 'top':
-        return 'translate(-50%, -100%)';
-      case 'bottom':
-        return 'translate(-50%, 0)';
-    }
-  };
 
   return (
     <div
@@ -127,13 +130,14 @@ export default function Tooltip({
             className={cn(
               'fixed z-50 pointer-events-none px-2.5 py-1.5 text-xs font-medium',
               'text-popover-foreground bg-popover/95 border border-border/80 shadow-md rounded-lg',
-              'backdrop-blur-xs transition-opacity duration-150 select-none whitespace-nowrap',
+              'backdrop-blur-xs select-none whitespace-nowrap transition-all duration-150 ease-out',
+              isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
               className
             )}
             style={{
               top: `${coords.top}px`,
               left: `${coords.left}px`,
-              transform: getTransform(),
+              transform: SIDE_CONFIG[side].transform,
             }}
           >
             {content}

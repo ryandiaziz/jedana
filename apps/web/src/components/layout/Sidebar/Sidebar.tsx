@@ -5,7 +5,7 @@ import ThemeToggle from '../../common/ThemeToggle';
 import Tooltip from '../../common/Tooltip';
 import { ConfirmModal } from '../../common/ConfirmModal';
 import { JedanaLogo } from '../../common/Logo';
-import { useAuth, usePreferences } from '../../../context';
+import { useAuth, usePreferences, useTheme } from '../../../context';
 import { db } from '../../../db/db';
 import { syncService } from '../../../features/sync/services/SyncService';
 import { getInitialSidebarState, saveSidebarState, SIDEBAR_STORAGE_KEY } from './sidebarState';
@@ -25,7 +25,10 @@ export default function Sidebar() {
   const [isResettingSync, setIsResettingSync] = useState(false);
   const { user, isLoading, logout } = useAuth();
   const { isMultiWalletEnabled } = usePreferences();
+  const { theme } = useTheme();
   const location = useLocation();
+
+  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--sidebar-w', isSidebarOpen ? '16rem' : '5rem');
@@ -34,8 +37,12 @@ export default function Sidebar() {
 
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === SIDEBAR_STORAGE_KEY && e.newValue !== null) {
-        setIsSidebarOpen(e.newValue === 'true');
+      if (e.key === SIDEBAR_STORAGE_KEY) {
+        if (e.newValue !== null) {
+          setIsSidebarOpen(e.newValue === 'true');
+        } else {
+          setIsSidebarOpen(true);
+        }
       }
     };
 
@@ -140,7 +147,7 @@ export default function Sidebar() {
               </button>
             </>
           ) : (
-            <Tooltip content="Expand Sidebar" side="right" enabled={!isSidebarOpen} wrapperClassName="w-auto mx-auto shrink-0">
+            <Tooltip content="Expand Sidebar" enabled={!isSidebarOpen} wrapperClassName="w-auto mx-auto shrink-0">
               <button 
                 onClick={() => setIsSidebarOpen(true)}
                 className="group relative flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shrink-0"
@@ -158,7 +165,7 @@ export default function Sidebar() {
         </div>
         <nav className="flex flex-col gap-1.5">
           {filteredNavItems.map(item => (
-            <Tooltip key={item.to} content={item.label} side="right" enabled={!isSidebarOpen}>
+            <Tooltip key={item.to} content={item.label} enabled={!isSidebarOpen}>
               <NavLink 
                 to={item.to} 
                 aria-label={item.label} 
@@ -186,29 +193,29 @@ export default function Sidebar() {
                   </span>
                 </div>
               ) : (
-                <Tooltip content={`Synced as: ${user.email}`} side="right" enabled={true}>
+                <Tooltip content={`Synced as: ${user.email}`} enabled={true}>
                   <div className="w-full flex items-center justify-center p-2.5 bg-muted/60 border border-border/50 rounded-xl cursor-default">
                     <Cloud size={18} className="text-primary mx-auto" />
                   </div>
                 </Tooltip>
               )}
               
-              <Tooltip content="Force Sync Data" side="right" enabled={!isSidebarOpen}>
+              <Tooltip content="Force Sync Data" enabled={!isSidebarOpen}>
                 <button 
                   onClick={handleResetSync}
                   aria-label="Force Sync Data" 
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-blue-500 hover:bg-blue-500/10 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-info hover:bg-info/10 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
                   <RefreshCw size={16} className="shrink-0" />
                   {isSidebarOpen && <span className="truncate">Force Sync Data</span>}
                 </button>
               </Tooltip>
 
-              <Tooltip content="Logout" side="right" enabled={!isSidebarOpen}>
+              <Tooltip content="Logout" enabled={!isSidebarOpen}>
                 <button 
                   onClick={handleLogout}
                   aria-label="Logout" 
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-red-500 hover:bg-red-500/10 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-destructive hover:bg-destructive/10 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
                   <LogOut size={16} className="shrink-0" />
                   {isSidebarOpen && <span className="truncate">Logout</span>}
@@ -216,7 +223,7 @@ export default function Sidebar() {
               </Tooltip>
             </div>
           ) : (
-            <Tooltip content="Sync via Google" side="right" enabled={!isSidebarOpen}>
+            <Tooltip content="Sync via Google" enabled={!isSidebarOpen}>
               <a 
                 href="/api/auth/google" 
                 aria-label="Sync via Google" 
@@ -227,7 +234,7 @@ export default function Sidebar() {
               </a>
             </Tooltip>
           )}
-          <Tooltip content="Toggle Theme" side="right" enabled={!isSidebarOpen}>
+          <Tooltip content={isDark ? 'Light Mode' : 'Dark Mode'} enabled={!isSidebarOpen}>
             <ThemeToggle isSidebarOpen={isSidebarOpen} />
           </Tooltip>
         </div>
