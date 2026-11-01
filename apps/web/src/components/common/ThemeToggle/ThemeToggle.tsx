@@ -23,7 +23,7 @@ export default function ThemeToggle({ isSidebarOpen = true, className, ...props 
       {...props}
     >
       {isDark ? <Sun size={18} className="shrink-0" /> : <Moon size={18} className="shrink-0" />}
-      {isSidebarOpen && <span className="truncate">{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+      {isSidebarOpen && <span className="truncate whitespace-nowrap">{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
     </button>
   );
 }

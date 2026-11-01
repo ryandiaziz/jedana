@@ -118,28 +118,28 @@ export default function Sidebar() {
       </nav>
 
       {/* ==================== DESKTOP SIDEBAR ==================== */}
-      <aside className={`hidden md:flex bg-card border-r border-border p-4 flex-col gap-6 h-screen sticky top-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
+      <aside className={`hidden md:flex bg-card border-r border-border p-4 flex-col gap-6 h-screen sticky top-0 overflow-x-hidden overflow-y-auto no-scrollbar transition-[width] duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
         <div className="flex items-center gap-2.5 px-1 py-1">
           {isSidebarOpen ? (
             <>
               <Link 
                 to="/" 
-                className="flex items-center gap-2.5 group cursor-pointer" 
+                className="flex items-center gap-2.5 group cursor-pointer min-w-0" 
                 title="Jedana Dashboard"
               >
-                <JedanaLogo variant="mark" size={36} className="group-hover:scale-105 transition-transform" />
-                <div className="flex flex-col">
-                  <h1 className="font-bold text-lg tracking-tight leading-none text-foreground group-hover:text-primary transition-colors">
+                <JedanaLogo variant="mark" size={36} className="group-hover:scale-105 transition-transform shrink-0" />
+                <div className="flex flex-col min-w-0 whitespace-nowrap overflow-hidden">
+                  <h1 className="font-bold text-lg tracking-tight leading-none text-foreground group-hover:text-primary transition-colors truncate">
                     Jedana
                   </h1>
-                  <span className="text-[11px] text-muted-foreground font-medium">Finance Tracker</span>
+                  <span className="text-[11px] text-muted-foreground font-medium truncate">Finance Tracker</span>
                 </div>
               </Link>
               
               {/* Collapse button */}
               <button 
                 onClick={() => setIsSidebarOpen(false)}
-                className="ml-auto flex p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="ml-auto flex p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
                 title="Collapse Sidebar"
                 aria-label="Collapse Sidebar"
               >
@@ -172,7 +172,7 @@ export default function Sidebar() {
                 className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-sm font-medium cursor-pointer ${isActive ? 'bg-primary/10 text-primary font-semibold shadow-xs' : 'hover:bg-muted/80 text-muted-foreground hover:text-foreground'} ${!isSidebarOpen ? 'justify-center' : ''}`}
               >
                 <item.icon size={19} className="shrink-0" />
-                {isSidebarOpen && <span className="truncate">{item.label}</span>}
+                {isSidebarOpen && <span className="truncate whitespace-nowrap">{item.label}</span>}
               </NavLink>
             </Tooltip>
           ))}
@@ -181,14 +181,14 @@ export default function Sidebar() {
           {isLoading ? (
             <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground">
               <Loader2 size={18} className="shrink-0 animate-spin" />
-              {isSidebarOpen && <span className="truncate">Loading...</span>}
+              {isSidebarOpen && <span className="truncate whitespace-nowrap">Loading...</span>}
             </div>
           ) : user ? (
             <div className="flex flex-col gap-2">
               {isSidebarOpen ? (
-                <div className="flex flex-col px-3 py-2 bg-muted/60 border border-border/50 rounded-xl">
-                  <span className="text-[10px] text-muted-foreground font-semibold mb-0.5 uppercase tracking-wider">Synced as</span>
-                  <span className="text-xs font-semibold text-primary truncate" title={user.email}>
+                <div className="flex flex-col px-3 py-2 bg-muted/60 border border-border/50 rounded-xl min-w-0 overflow-hidden">
+                  <span className="text-[10px] text-muted-foreground font-semibold mb-0.5 uppercase tracking-wider whitespace-nowrap truncate">Synced as</span>
+                  <span className="text-xs font-semibold text-primary truncate whitespace-nowrap" title={user.email}>
                     {user.email}
                   </span>
                 </div>
@@ -207,7 +207,7 @@ export default function Sidebar() {
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-info hover:bg-info/10 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
                   <RefreshCw size={16} className="shrink-0" />
-                  {isSidebarOpen && <span className="truncate">Force Sync Data</span>}
+                  {isSidebarOpen && <span className="truncate whitespace-nowrap">Force Sync Data</span>}
                 </button>
               </Tooltip>
 
@@ -218,7 +218,7 @@ export default function Sidebar() {
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-destructive hover:bg-destructive/10 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
                   <LogOut size={16} className="shrink-0" />
-                  {isSidebarOpen && <span className="truncate">Logout</span>}
+                  {isSidebarOpen && <span className="truncate whitespace-nowrap">Logout</span>}
                 </button>
               </Tooltip>
             </div>
@@ -230,7 +230,7 @@ export default function Sidebar() {
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
               >
                 <Cloud size={18} className="shrink-0" />
-                {isSidebarOpen && <span className="truncate font-semibold">Sync via Google</span>}
+                {isSidebarOpen && <span className="truncate whitespace-nowrap font-semibold">Sync via Google</span>}
               </a>
             </Tooltip>
           )}
