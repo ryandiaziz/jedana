@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation, Link } from 'react-router-dom';
 import { Wallet, LayoutDashboard, Tags as TagsIcon, PieChart, ChevronLeft, ChevronRight, Cloud, LogOut, Loader2, RefreshCw, Settings, Repeat } from 'lucide-react';
 import ThemeToggle from '../../common/ThemeToggle';
+import Tooltip from '../../common/Tooltip';
 import { ConfirmModal } from '../../common/ConfirmModal';
 import { JedanaLogo } from '../../common/Logo';
 import { useAuth, usePreferences } from '../../../context';
 import { db } from '../../../db/db';
 import { syncService } from '../../../features/sync/services/SyncService';
+import { getInitialSidebarState, saveSidebarState, SIDEBAR_STORAGE_KEY } from './sidebarState';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -18,7 +20,7 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(getInitialSidebarState);
   const [showResetSyncModal, setShowResetSyncModal] = useState(false);
   const [isResettingSync, setIsResettingSync] = useState(false);
   const { user, isLoading, logout } = useAuth();
@@ -27,7 +29,19 @@ export default function Sidebar() {
 
   useEffect(() => {
     document.documentElement.style.setProperty('--sidebar-w', isSidebarOpen ? '16rem' : '5rem');
+    saveSidebarState(isSidebarOpen);
   }, [isSidebarOpen]);
+
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === SIDEBAR_STORAGE_KEY && e.newValue !== null) {
+        setIsSidebarOpen(e.newValue === 'true');
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const filteredNavItems = navItems.filter(item => {
     if (item.to === '/wallets' && !isMultiWalletEnabled) return false;
@@ -126,32 +140,34 @@ export default function Sidebar() {
               </button>
             </>
           ) : (
-            <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className="group relative flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shrink-0"
-              title="Expand Sidebar"
-              aria-label="Expand Sidebar"
-            >
-              <div className="group-hover:opacity-0 transition-opacity duration-150">
-                <JedanaLogo variant="mark" size={36} />
-              </div>
-              <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-primary/20 backdrop-blur-xs rounded-xl text-primary border border-primary/30 shadow-xs">
-                <ChevronRight size={18} />
-              </div>
-            </button>
+            <Tooltip content="Expand Sidebar" side="right" enabled={!isSidebarOpen} wrapperClassName="w-auto mx-auto shrink-0">
+              <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="group relative flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shrink-0"
+                aria-label="Expand Sidebar"
+              >
+                <div className="group-hover:opacity-0 transition-opacity duration-150">
+                  <JedanaLogo variant="mark" size={36} />
+                </div>
+                <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-primary/20 backdrop-blur-xs rounded-xl text-primary border border-primary/30 shadow-xs">
+                  <ChevronRight size={18} />
+                </div>
+              </button>
+            </Tooltip>
           )}
         </div>
         <nav className="flex flex-col gap-1.5">
           {filteredNavItems.map(item => (
-            <NavLink 
-              key={item.to}
-              to={item.to} 
-              title={item.label} 
-              className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-sm font-medium cursor-pointer ${isActive ? 'bg-primary/10 text-primary font-semibold shadow-xs' : 'hover:bg-muted/80 text-muted-foreground hover:text-foreground'}`}
-            >
-              <item.icon size={19} className="shrink-0" />
-              {isSidebarOpen && <span className="truncate">{item.label}</span>}
-            </NavLink>
+            <Tooltip key={item.to} content={item.label} side="right" enabled={!isSidebarOpen}>
+              <NavLink 
+                to={item.to} 
+                aria-label={item.label} 
+                className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-sm font-medium cursor-pointer ${isActive ? 'bg-primary/10 text-primary font-semibold shadow-xs' : 'hover:bg-muted/80 text-muted-foreground hover:text-foreground'} ${!isSidebarOpen ? 'justify-center' : ''}`}
+              >
+                <item.icon size={19} className="shrink-0" />
+                {isSidebarOpen && <span className="truncate">{item.label}</span>}
+              </NavLink>
+            </Tooltip>
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-3 border-t border-border pt-4">
@@ -162,43 +178,58 @@ export default function Sidebar() {
             </div>
           ) : user ? (
             <div className="flex flex-col gap-2">
-              <div className="flex flex-col px-3 py-2 bg-muted/60 border border-border/50 rounded-xl">
-                {isSidebarOpen && <span className="text-[10px] text-muted-foreground font-semibold mb-0.5 uppercase tracking-wider">Synced as</span>}
-                <span className={`text-xs font-semibold text-primary truncate ${!isSidebarOpen && 'hidden'}`} title={user.email}>
-                  {user.email}
-                </span>
-                {!isSidebarOpen && <Cloud size={18} className="text-primary mx-auto" />}
-              </div>
+              {isSidebarOpen ? (
+                <div className="flex flex-col px-3 py-2 bg-muted/60 border border-border/50 rounded-xl">
+                  <span className="text-[10px] text-muted-foreground font-semibold mb-0.5 uppercase tracking-wider">Synced as</span>
+                  <span className="text-xs font-semibold text-primary truncate" title={user.email}>
+                    {user.email}
+                  </span>
+                </div>
+              ) : (
+                <Tooltip content={`Synced as: ${user.email}`} side="right" enabled={true}>
+                  <div className="w-full flex items-center justify-center p-2.5 bg-muted/60 border border-border/50 rounded-xl cursor-default">
+                    <Cloud size={18} className="text-primary mx-auto" />
+                  </div>
+                </Tooltip>
+              )}
               
-              <button 
-                onClick={handleResetSync}
-                title="Force Pull Data" 
-                className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-blue-500 hover:bg-blue-500/10 cursor-pointer"
-              >
-                <RefreshCw size={16} className="shrink-0" />
-                {isSidebarOpen && <span className="truncate">Force Sync Data</span>}
-              </button>
+              <Tooltip content="Force Sync Data" side="right" enabled={!isSidebarOpen}>
+                <button 
+                  onClick={handleResetSync}
+                  aria-label="Force Sync Data" 
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-blue-500 hover:bg-blue-500/10 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
+                >
+                  <RefreshCw size={16} className="shrink-0" />
+                  {isSidebarOpen && <span className="truncate">Force Sync Data</span>}
+                </button>
+              </Tooltip>
 
-              <button 
-                onClick={handleLogout}
-                title="Logout & Wipe Data" 
-                className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-red-500 hover:bg-red-500/10 cursor-pointer"
-              >
-                <LogOut size={16} className="shrink-0" />
-                {isSidebarOpen && <span className="truncate">Logout</span>}
-              </button>
+              <Tooltip content="Logout" side="right" enabled={!isSidebarOpen}>
+                <button 
+                  onClick={handleLogout}
+                  aria-label="Logout" 
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-red-500 hover:bg-red-500/10 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
+                >
+                  <LogOut size={16} className="shrink-0" />
+                  {isSidebarOpen && <span className="truncate">Logout</span>}
+                </button>
+              </Tooltip>
             </div>
           ) : (
-            <a 
-              href="/api/auth/google" 
-              title="Sync via Google" 
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
-            >
-              <Cloud size={18} className="shrink-0" />
-              {isSidebarOpen && <span className="truncate font-semibold">Sync via Google</span>}
-            </a>
+            <Tooltip content="Sync via Google" side="right" enabled={!isSidebarOpen}>
+              <a 
+                href="/api/auth/google" 
+                aria-label="Sync via Google" 
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer ${!isSidebarOpen ? 'justify-center' : ''}`}
+              >
+                <Cloud size={18} className="shrink-0" />
+                {isSidebarOpen && <span className="truncate font-semibold">Sync via Google</span>}
+              </a>
+            </Tooltip>
           )}
-          <ThemeToggle isSidebarOpen={isSidebarOpen} />
+          <Tooltip content="Toggle Theme" side="right" enabled={!isSidebarOpen}>
+            <ThemeToggle isSidebarOpen={isSidebarOpen} />
+          </Tooltip>
         </div>
       </aside>
 

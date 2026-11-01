@@ -33,6 +33,12 @@
           if (metaTheme) {
             metaTheme.setAttribute('content', isDark ? '#090d16' : '#f8fafc');
           }
+
+          var sidebarKey = 'jedana-sidebar-open';
+          var savedSidebar = localStorage.getItem(sidebarKey);
+          if (savedSidebar === 'false') {
+            root.style.setProperty('--sidebar-w', '5rem');
+          }
         } catch (_) {}
       })();
     </script>
