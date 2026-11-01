@@ -1,0 +1,37 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    image: jedana-server
+    container_name: jedana_server
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgres://jedana_user:${POSTGRES_PASSWORD}@172.17.0.1:5433/jedana_db
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+    networks:
+      - jedana_net
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: jedana-web
+    container_name: jedana_web
+    restart: always
+    ports:
+      - "127.0.0.1:8090:80"
+    depends_on:
+      - server
+    networks:
+      - jedana_net
+
+networks:
+  jedana_net:
+    driver: bridge
