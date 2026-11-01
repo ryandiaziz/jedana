@@ -63,22 +63,16 @@ jobs:
           tags: jedana-web:latest
 
   deploy:
-    name: Auto-Deploy to VPS via SSH
+    name: Auto-Deploy on VPS (self-hosted)
     needs: docker-build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, jedana-deploy]
 
     steps:
-      - name: Deploy to Remote VPS via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || '22' }}
-          script: |
-            set -e
-            cd ${{ secrets.PROJECT_PATH || '/var/www/jedana' }}
-            git fetch --tags --force
-            git checkout --force ${{ github.ref_name }}
-            docker compose -f docker-compose.deploy.yml up -d --build
-            git checkout --force master
+      - name: Deploy on VPS
+        run: |
+          set -e
+          cd /var/www/jedana
+          git fetch --tags --force origin
+          git checkout --force "${{ github.ref_name }}"
+          docker compose -f docker-compose.deploy.yml up -d --build
+          git checkout --force master
