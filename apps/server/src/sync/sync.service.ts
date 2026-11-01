@@ -31,6 +31,7 @@ const SYNC_SCHEMA: Record<string, TableSchema> = {
       'date',
       'note',
       'payee',
+      'is_voided',
       'is_deleted',
       'created_at',
       'updated_at',
@@ -251,14 +252,16 @@ export class SyncService {
                 val = record[col];
               }
 
-              if (val === undefined) {
-                if (col === 'is_deleted' || col === 'is_archived') val = false;
-                if (col === 'is_active') val = true;
-                if (col === 'tags') val = [];
-              }
-
-              if (col === 'tags' && !Array.isArray(val)) {
-                val = [];
+              if (
+                col === 'is_deleted' ||
+                col === 'is_archived' ||
+                col === 'is_voided'
+              ) {
+                val = Boolean(val);
+              } else if (col === 'is_active') {
+                val = val !== undefined && val !== null ? Boolean(val) : true;
+              } else if (col === 'tags') {
+                if (!Array.isArray(val)) val = [];
               }
 
               if (col === 'created_at' || col === 'updated_at') {
@@ -369,6 +372,14 @@ export class SyncService {
           newObj[camelKey] = val
             ? new Date(val as string | number | Date).getTime()
             : undefined;
+        } else if (
+          camelKey === 'isVoided' ||
+          camelKey === 'isDeleted' ||
+          camelKey === 'isArchived'
+        ) {
+          newObj[camelKey] = Boolean(val);
+        } else if (camelKey === 'isActive') {
+          newObj[camelKey] = val !== undefined ? Boolean(val) : true;
         } else {
           newObj[camelKey] = val;
         }
